@@ -45,7 +45,7 @@ export function BottomNav() {
             aria-label="Close quick actions"
             onClick={() => setShowQuickAdd(false)}
           />
-          <div className="animate-rise fixed bottom-20 left-1/2 z-40 w-[calc(100%-2rem)] max-w-[400px] -translate-x-1/2 overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] shadow-lg">
+          <div className="animate-rise fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100%-2rem)] max-w-[400px] -translate-x-1/2 overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] shadow-lg">
             <button
               onClick={() => {
                 setShowQuickAdd(false)

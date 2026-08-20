@@ -225,7 +225,7 @@ export function ExpenseSheet({
           value={date}
           max={new Date().toISOString().slice(0, 10)}
           onChange={(e) => setDate(e.target.value)}
-          className="font-mono-nums mb-4 w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-3 text-[var(--color-ink)] outline-none focus:border-[var(--color-ledger)]"
+          className="mb-4 block w-full max-w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-3 text-[var(--color-ink)] outline-none focus:border-[var(--color-ledger)]"
         />
 
         <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">

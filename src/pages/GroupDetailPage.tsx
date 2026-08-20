@@ -483,7 +483,7 @@ export function GroupDetailPage() {
 
       <button
         onClick={() => setShowAddExpense(true)}
-        className="fixed bottom-20 right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-ledger)] text-white shadow-lg"
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-ledger)] text-white shadow-lg"
         aria-label="Add expense"
       >
         <Plus size={26} strokeWidth={2.25} />
