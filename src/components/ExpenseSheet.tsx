@@ -1,24 +1,32 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Check, X, Receipt, ChevronDown } from 'lucide-react'
+import type { Expense, Split } from '../features/expenses/hooks'
 import type { GroupMember } from '../features/groups/hooks'
 import { useGroups } from '../features/groups/hooks'
-import { useAddExpense } from '../features/expenses/hooks'
+import { useAddExpense, useUpdateExpense } from '../features/expenses/hooks'
 import { splitEqually, splitByPercentage, formatCurrency } from '../utils/money'
 import { POPULAR_CATEGORIES, MORE_CATEGORIES } from '../utils/categories'
 
 type SplitMode = 'equal' | 'exact' | 'percent'
 
+function splitsToRecord(splits: Split[]): Record<string, string> {
+  return Object.fromEntries(splits.map((s) => [s.user_id, String(s.share)]))
+}
+
 export function ExpenseSheet({
   groupId: fixedGroupId,
   members: fixedMembers,
   currentUserId,
+  expense,
   onClose,
 }: {
   groupId?: string
   members?: GroupMember[]
   currentUserId: string
+  expense?: Expense
   onClose: () => void
 }) {
+  const isEditing = !!expense
   const { data: allGroups } = useGroups()
   const needsGroupPicker = !fixedGroupId
   const [selectedGroupId, setSelectedGroupId] = useState(fixedGroupId ?? '')
@@ -27,14 +35,20 @@ export function ExpenseSheet({
   const members = fixedGroupId ? fixedMembers! : allGroups?.find((g) => g.id === selectedGroupId)?.members ?? []
 
   const addExpense = useAddExpense(groupId)
-  const [description, setDescription] = useState('')
-  const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState('other')
+  const updateExpense = useUpdateExpense(groupId)
+  const [description, setDescription] = useState(expense?.description ?? '')
+  const [amount, setAmount] = useState(expense ? String(expense.amount) : '')
+  const [date, setDate] = useState(expense?.expense_date ?? new Date().toISOString().slice(0, 10))
+  const [category, setCategory] = useState(expense?.category ?? 'other')
   const [showMoreCategories, setShowMoreCategories] = useState(false)
-  const [paidBy, setPaidBy] = useState(currentUserId)
-  const [mode, setMode] = useState<SplitMode>('equal')
-  const [included, setIncluded] = useState<Set<string>>(new Set(members.map((m) => m.user_id)))
-  const [customValues, setCustomValues] = useState<Record<string, string>>({})
+  const [paidBy, setPaidBy] = useState(expense?.paid_by ?? currentUserId)
+  const [mode, setMode] = useState<SplitMode>(isEditing ? 'exact' : 'equal')
+  const [included, setIncluded] = useState<Set<string>>(
+    new Set(expense ? expense.splits.map((s) => s.user_id) : members.map((m) => m.user_id))
+  )
+  const [customValues, setCustomValues] = useState<Record<string, string>>(
+    expense ? splitsToRecord(expense.splits) : {}
+  )
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -111,15 +125,25 @@ export function ExpenseSheet({
       return
     }
 
+    if (!date) {
+      setError('Pick a date')
+      return
+    }
+
     try {
-      await addExpense.mutateAsync({
+      const payload = {
         description: description.trim(),
         amount: total,
         paidBy,
-        date: new Date().toISOString().slice(0, 10),
+        date,
         category,
         splits: [...shares.entries()].map(([user_id, share]) => ({ user_id, share })),
-      })
+      }
+      if (expense) {
+        await updateExpense.mutateAsync({ id: expense.id, ...payload })
+      } else {
+        await addExpense.mutateAsync(payload)
+      }
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -139,7 +163,9 @@ export function ExpenseSheet({
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--color-line)]" />
         <div className="mb-4 flex items-center justify-center gap-2">
           <Receipt size={18} className="text-[var(--color-ledger)]" strokeWidth={2.25} />
-          <h2 className="text-base font-semibold text-[var(--color-ink)]">New line item</h2>
+          <h2 className="text-base font-semibold text-[var(--color-ink)]">
+            {isEditing ? 'Edit line item' : 'New line item'}
+          </h2>
         </div>
 
         {needsGroupPicker && (
@@ -190,7 +216,16 @@ export function ExpenseSheet({
           placeholder="₹ 0.00"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="font-mono-nums mb-4 w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-3 text-center text-2xl font-semibold text-[var(--color-ink)] outline-none focus:border-[var(--color-ledger)]"
+          className="font-mono-nums mb-3 w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-3 text-center text-2xl font-semibold text-[var(--color-ink)] outline-none focus:border-[var(--color-ledger)]"
+        />
+
+        <input
+          type="date"
+          required
+          value={date}
+          max={new Date().toISOString().slice(0, 10)}
+          onChange={(e) => setDate(e.target.value)}
+          className="font-mono-nums mb-4 w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-3 text-[var(--color-ink)] outline-none focus:border-[var(--color-ledger)]"
         />
 
         <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
@@ -344,10 +379,16 @@ export function ExpenseSheet({
 
         <button
           type="submit"
-          disabled={addExpense.isPending || !groupId}
+          disabled={addExpense.isPending || updateExpense.isPending || !groupId}
           className="w-full rounded-xl bg-[var(--color-ledger)] py-3 font-semibold text-white disabled:opacity-50"
         >
-          {addExpense.isPending ? 'Adding…' : 'Add expense'}
+          {isEditing
+            ? updateExpense.isPending
+              ? 'Saving…'
+              : 'Save changes'
+            : addExpense.isPending
+              ? 'Adding…'
+              : 'Add expense'}
         </button>
         <button
           type="button"

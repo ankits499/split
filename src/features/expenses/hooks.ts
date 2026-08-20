@@ -91,6 +91,46 @@ export function useAddExpense(groupId: string) {
   })
 }
 
+export function useUpdateExpense(groupId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: {
+      id: string
+      description: string
+      amount: number
+      paidBy: string
+      splits: Split[]
+      date: string
+      category: string
+    }) => {
+      const { error } = await supabase
+        .from('expenses')
+        .update({
+          description: input.description,
+          amount: input.amount,
+          paid_by: input.paidBy,
+          expense_date: input.date,
+          category: input.category,
+        })
+        .eq('id', input.id)
+      if (error) throw error
+
+      const { error: delErr } = await supabase.from('expense_splits').delete().eq('expense_id', input.id)
+      if (delErr) throw delErr
+
+      const { error: splitErr } = await supabase.from('expense_splits').insert(
+        input.splits.map((s) => ({ expense_id: input.id, user_id: s.user_id, share: s.share }))
+      )
+      if (splitErr) throw splitErr
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
+      queryClient.invalidateQueries({ queryKey: ['settlements', groupId] })
+      queryClient.invalidateQueries({ queryKey: ['overall-summary'] })
+    },
+  })
+}
+
 export function useDeleteExpense(groupId: string) {
   const queryClient = useQueryClient()
   return useMutation({

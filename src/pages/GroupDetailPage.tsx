@@ -52,6 +52,7 @@ export function GroupDetailPage() {
 
   const [tab, setTab] = useState<Tab>(routeState?.tab ?? 'expenses')
   const [showAddExpense, setShowAddExpense] = useState(!!routeState?.openExpense)
+  const [editTarget, setEditTarget] = useState<Expense | null>(null)
   const [showAddMember, setShowAddMember] = useState(false)
   const [memberEmail, setMemberEmail] = useState('')
   const [memberError, setMemberError] = useState<string | null>(null)
@@ -351,7 +352,13 @@ export function GroupDetailPage() {
               return (
                 <div
                   key={e.id}
-                  className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setEditTarget(e)}
+                  onKeyDown={(ev) => {
+                    if (ev.key === 'Enter' || ev.key === ' ') setEditTarget(e)
+                  }}
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 text-left shadow-[var(--shadow-card)] active:opacity-80"
                 >
                   <Avatar name={nameFor(e.paid_by)} size="md" />
                   <div className="min-w-0 flex-1">
@@ -371,7 +378,10 @@ export function GroupDetailPage() {
                     </span>
                   )}
                   <button
-                    onClick={() => setDeleteTarget(e)}
+                    onClick={(ev) => {
+                      ev.stopPropagation()
+                      setDeleteTarget(e)
+                    }}
                     className="shrink-0 rounded-lg p-1.5 text-[var(--color-ink-muted)] hover:text-[var(--color-receipt)]"
                     aria-label={`Delete ${e.description}`}
                   >
@@ -462,6 +472,16 @@ export function GroupDetailPage() {
           members={group.members}
           currentUserId={userId}
           onClose={() => setShowAddExpense(false)}
+        />
+      )}
+
+      {editTarget && (
+        <ExpenseSheet
+          groupId={groupId!}
+          members={group.members}
+          currentUserId={userId}
+          expense={editTarget}
+          onClose={() => setEditTarget(null)}
         />
       )}
 
