@@ -11,8 +11,8 @@ interface AuthContextValue {
   session: Session | null
   profile: Profile | null
   loading: boolean
-  signInWithOtp: (email: string) => Promise<{ error: string | null }>
-  verifyOtp: (email: string, token: string) => Promise<{ error: string | null }>
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>
+  signUp: (email: string, password: string, name: string) => Promise<{ error: string | null }>
   updateName: (name: string) => Promise<void>
   signOut: () => Promise<void>
 }
@@ -48,13 +48,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(({ data }) => setProfile(data))
   }, [session?.user?.id])
 
-  const signInWithOtp = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     return { error: error?.message ?? null }
   }
 
-  const verifyOtp = async (email: string, token: string) => {
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
+  const signUp = async (email: string, password: string, name: string) => {
+    const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } })
     return { error: error?.message ?? null }
   }
 
@@ -69,9 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider
-      value={{ session, profile, loading, signInWithOtp, verifyOtp, updateName, signOut }}
-    >
+    <AuthContext.Provider value={{ session, profile, loading, signIn, signUp, updateName, signOut }}>
       {children}
     </AuthContext.Provider>
   )

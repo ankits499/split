@@ -15,6 +15,7 @@ export interface Expense {
   paid_by: string
   expense_date: string
   created_at: string
+  category: string
   splits: Split[]
 }
 
@@ -24,7 +25,9 @@ export function useExpenses(groupId: string | undefined) {
     queryFn: async (): Promise<Expense[]> => {
       const { data, error } = await supabase
         .from('expenses')
-        .select('id, group_id, description, amount, paid_by, expense_date, created_at, expense_splits(user_id, share)')
+        .select(
+          'id, group_id, description, amount, paid_by, expense_date, created_at, category, expense_splits(user_id, share)'
+        )
         .eq('group_id', groupId!)
         .order('expense_date', { ascending: false })
         .order('created_at', { ascending: false })
@@ -37,6 +40,7 @@ export function useExpenses(groupId: string | undefined) {
         paid_by: e.paid_by,
         expense_date: e.expense_date,
         created_at: e.created_at,
+        category: e.category,
         splits: e.expense_splits.map((s: { user_id: string; share: number }) => ({
           user_id: s.user_id,
           share: Number(s.share),
@@ -57,6 +61,7 @@ export function useAddExpense(groupId: string) {
       paidBy: string
       splits: Split[]
       date: string
+      category: string
     }) => {
       const { data: expense, error } = await supabase
         .from('expenses')
@@ -67,6 +72,7 @@ export function useAddExpense(groupId: string) {
           paid_by: input.paidBy,
           created_by: session!.user.id,
           expense_date: input.date,
+          category: input.category,
         })
         .select('id')
         .single()
@@ -80,6 +86,7 @@ export function useAddExpense(groupId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
       queryClient.invalidateQueries({ queryKey: ['settlements', groupId] })
+      queryClient.invalidateQueries({ queryKey: ['overall-summary'] })
     },
   })
 }
@@ -93,6 +100,7 @@ export function useDeleteExpense(groupId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
+      queryClient.invalidateQueries({ queryKey: ['overall-summary'] })
     },
   })
 }

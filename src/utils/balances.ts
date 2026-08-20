@@ -36,6 +36,16 @@ export function computeNetBalances(
   return net
 }
 
+/** How much a single expense shifted one user's balance: positive = they're owed back, negative = they owe. */
+export function myExpenseDelta(
+  expense: { paid_by: string; amount: number; splits: { user_id: string; share: number }[] },
+  userId: string
+): number {
+  const myShare = expense.splits.find((s) => s.user_id === userId)?.share ?? 0
+  const paid = expense.paid_by === userId ? expense.amount : 0
+  return Math.round((paid - myShare) * 100) / 100
+}
+
 export interface Transfer {
   from: string
   to: string

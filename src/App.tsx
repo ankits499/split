@@ -7,7 +7,7 @@ export function AppLayout() {
   const { session, loading } = useAuth()
 
   if (loading) {
-    return <div className="flex flex-1 items-center justify-center text-[var(--color-text-muted)]">Loading…</div>
+    return <div className="flex flex-1 items-center justify-center text-[var(--color-ink-muted)]">Loading…</div>
   }
 
   if (!session) {

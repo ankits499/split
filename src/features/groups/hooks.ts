@@ -10,6 +10,7 @@ export interface GroupMember {
 export interface GroupSummary {
   id: string
   name: string
+  created_by: string
   members: GroupMember[]
 }
 
@@ -24,7 +25,7 @@ async function fetchGroups(userId: string): Promise<GroupSummary[]> {
 
   const { data: groups, error: groupErr } = await supabase
     .from('groups')
-    .select('id, name')
+    .select('id, name, created_by')
     .in('id', groupIds)
   if (groupErr) throw groupErr
 
@@ -37,6 +38,7 @@ async function fetchGroups(userId: string): Promise<GroupSummary[]> {
   return groups.map((g) => ({
     id: g.id,
     name: g.name,
+    created_by: g.created_by,
     members: allMembers
       .filter((m) => m.group_id === g.id)
       // @ts-expect-error joined relation shape
@@ -60,7 +62,7 @@ export function useGroup(groupId: string | undefined) {
     queryFn: async (): Promise<GroupSummary> => {
       const { data: group, error } = await supabase
         .from('groups')
-        .select('id, name')
+        .select('id, name, created_by')
         .eq('id', groupId!)
         .single()
       if (error) throw error
@@ -74,6 +76,7 @@ export function useGroup(groupId: string | undefined) {
       return {
         id: group.id,
         name: group.name,
+        created_by: group.created_by,
         members: members.map((m) => ({
           user_id: m.user_id,
           // @ts-expect-error joined relation shape
@@ -136,6 +139,51 @@ export function useAddMember(groupId: string) {
       if (error) throw error
       if (!match) throw new Error('No Split user with that email yet. Ask them to sign up first.')
       await supabase.from('group_members').insert({ group_id: groupId, user_id: match.id })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group', groupId] })
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+    },
+  })
+}
+
+export function useRemoveMember(groupId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from('group_members')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', userId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group', groupId] })
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+    },
+  })
+}
+
+export function useDeleteGroup() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      const { error } = await supabase.from('groups').delete().eq('id', groupId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+    },
+  })
+}
+
+export function useRenameGroup(groupId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const { error } = await supabase.from('groups').update({ name }).eq('id', groupId)
+      if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['group', groupId] })

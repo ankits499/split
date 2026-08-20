@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Split</title>
+    <!--
+      GitHub Pages has no server-side rewrites, so a direct load or refresh of
+      any route other than "/" 404s. This redirects back to index.html with
+      the real path encoded in a query string; a matching script in
+      index.html restores it via history.replaceState before React mounts.
+      Standard pattern: https://github.com/rafgraph/spa-github-pages
+    -->
+    <script>
+      var base = '/split'
+      var path = location.pathname.slice(base.length) + location.search + location.hash
+      location.replace(base + '/?redirect=' + encodeURIComponent(path))
+    </script>
+  </head>
+  <body></body>
+</html>

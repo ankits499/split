@@ -13,3 +13,8 @@ if (!url || !anonKey) {
 // generated, so the client is untyped here — see supabase/schema.sql for
 // the source of truth.
 export const supabase = createClient(url, anonKey)
+
+if (import.meta.env.DEV) {
+  // @ts-expect-error dev-only escape hatch for testing auth from the browser console
+  window.supabase = supabase
+}

@@ -1,42 +1,50 @@
 import { Link } from 'react-router-dom'
 import { formatCurrency } from '../utils/money'
+import { Avatar } from './Avatar'
 
 export function GroupCard({
   id,
   name,
-  memberCount,
+  memberNames,
   netBalance,
+  loading,
 }: {
   id: string
   name: string
-  memberCount: number
+  memberNames: string[]
   netBalance: number
+  loading?: boolean
 }) {
   const settled = Math.abs(netBalance) < 0.01
 
   return (
     <Link
       to={`/groups/${id}`}
-      className="block rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 active:opacity-70"
+      className="block rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)] active:opacity-80"
     >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="font-medium text-[var(--color-text)]">{name}</p>
-          <p className="text-sm text-[var(--color-text-muted)]">
-            {memberCount} {memberCount === 1 ? 'person' : 'people'}
-          </p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Avatar name={name} size="md" />
+          <div>
+            <p className="font-semibold text-[var(--color-ink)]">{name}</p>
+            <p className="text-xs text-[var(--color-ink-muted)]">
+              {memberNames.length} {memberNames.length === 1 ? 'person' : 'people'}
+            </p>
+          </div>
         </div>
         <div className="text-right">
-          {settled ? (
-            <p className="text-sm text-[var(--color-text-muted)]">Settled up</p>
+          {loading ? (
+            <p className="text-xs text-[var(--color-ink-muted)]">…</p>
+          ) : settled ? (
+            <p className="text-xs text-[var(--color-ink-muted)]">Settled up</p>
           ) : (
             <>
-              <p className="text-sm text-[var(--color-text-muted)]">
+              <p className="text-xs text-[var(--color-ink-muted)]">
                 {netBalance > 0 ? 'You are owed' : 'You owe'}
               </p>
               <p
-                className={`font-semibold ${
-                  netBalance > 0 ? 'text-[var(--color-owed)]' : 'text-[var(--color-owe)]'
+                className={`font-mono-nums text-base font-semibold ${
+                  netBalance > 0 ? 'text-[var(--color-ledger)]' : 'text-[var(--color-receipt)]'
                 }`}
               >
                 {formatCurrency(Math.abs(netBalance))}

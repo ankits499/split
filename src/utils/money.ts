@@ -7,6 +7,12 @@ export function formatCurrency(amount: number, currency = 'INR'): string {
   }).format(amount)
 }
 
+/** Formats a plain "YYYY-MM-DD" date (no time component) without any UTC/local timezone shift. */
+export function formatShortDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  return new Date(year, month - 1, day).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+}
+
 /** Round to paise/cents and distribute the leftover so shares sum exactly to `total`. */
 export function splitEqually(total: number, count: number): number[] {
   if (count <= 0) return []

@@ -1,15 +1,18 @@
 import { GroupCard } from './GroupCard'
-import { useExpenses } from '../features/expenses/hooks'
-import { useSettlements } from '../features/settlements/hooks'
-import { computeNetBalances } from '../utils/balances'
+import { useOverallSummary } from '../features/dashboard/hooks'
 import type { GroupSummary } from '../features/groups/hooks'
 
-export function GroupCardContainer({ group, userId }: { group: GroupSummary; userId: string }) {
-  const { data: expenses } = useExpenses(group.id)
-  const { data: settlements } = useSettlements(group.id)
+export function GroupCardContainer({ group }: { group: GroupSummary }) {
+  const { data: summary, isLoading } = useOverallSummary()
+  const netBalance = summary?.netByGroup.get(group.id) ?? 0
 
-  const net = computeNetBalances(expenses ?? [], settlements ?? [])
-  const netBalance = net.get(userId) ?? 0
-
-  return <GroupCard id={group.id} name={group.name} memberCount={group.members.length} netBalance={netBalance} />
+  return (
+    <GroupCard
+      id={group.id}
+      name={group.name}
+      memberNames={group.members.map((m) => m.name)}
+      netBalance={netBalance}
+      loading={isLoading}
+    />
+  )
 }

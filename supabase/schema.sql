@@ -31,7 +31,9 @@ create table expenses (
   paid_by uuid not null references profiles (id),
   created_by uuid not null references profiles (id),
   expense_date date not null default current_date,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- one of the ids in src/utils/categories.ts (not FK-enforced; app-level enum)
+  category text not null default 'other'
 );
 
 -- One row per (expense, member) recording that member's owed share.
@@ -83,18 +85,29 @@ create policy "profiles insertable by owner" on profiles
   for insert to authenticated with check (id = auth.uid());
 
 -- groups
+-- "or created_by = auth.uid()" is required so a freshly-created group is
+-- readable by its creator before the group_members row for them exists yet
+-- (the insert + the .select() PostgREST does to return the new row happen
+-- before the creator's own membership row is inserted).
 create policy "groups readable by members" on groups
-  for select to authenticated using (is_group_member(id));
+  for select to authenticated using (is_group_member(id) or created_by = auth.uid());
 create policy "groups insertable by authenticated" on groups
   for insert to authenticated with check (created_by = auth.uid());
+create policy "groups updatable by members" on groups
+  for update to authenticated using (is_group_member(id));
+create policy "groups deletable by creator" on groups
+  for delete to authenticated using (created_by = auth.uid());
 
 -- group_members
+-- "or user_id = auth.uid()" avoids the same bootstrapping problem: reading
+-- back your own just-inserted membership row shouldn't depend on
+-- is_group_member(), which queries this same table.
 create policy "group_members readable by members" on group_members
-  for select to authenticated using (is_group_member(group_id));
+  for select to authenticated using (is_group_member(group_id) or user_id = auth.uid());
 create policy "group_members insertable by members" on group_members
   for insert to authenticated with check (is_group_member(group_id) or user_id = auth.uid());
-create policy "group_members deletable by self" on group_members
-  for delete to authenticated using (user_id = auth.uid());
+create policy "group_members deletable by members" on group_members
+  for delete to authenticated using (is_group_member(group_id) or user_id = auth.uid());
 
 -- expenses
 create policy "expenses readable by members" on expenses

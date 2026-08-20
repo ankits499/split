@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 
 export interface Settlement {
   id: string
+  group_id: string
   from_user: string
   to_user: string
   amount: number
@@ -15,7 +16,7 @@ export function useSettlements(groupId: string | undefined) {
     queryFn: async (): Promise<Settlement[]> => {
       const { data, error } = await supabase
         .from('settlements')
-        .select('id, from_user, to_user, amount, created_at')
+        .select('id, group_id, from_user, to_user, amount, created_at')
         .eq('group_id', groupId!)
         .order('created_at', { ascending: false })
       if (error) throw error
