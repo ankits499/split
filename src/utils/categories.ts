@@ -15,11 +15,9 @@ export const CATEGORIES: Category[] = [
   { id: 'travel', label: 'Travel', emoji: '✈️', color: '#0f766e' },
   { id: 'shopping', label: 'Shopping', emoji: '🛍️', color: '#d97706' },
   { id: 'medical', label: 'Medical', emoji: '💊', color: '#dc2626' },
+  { id: 'fitness', label: 'Fitness', emoji: '💪', color: '#059669' },
   { id: 'other', label: 'Other', emoji: '🧾', color: '#4b5563' },
 ]
-
-export const POPULAR_CATEGORIES = CATEGORIES.slice(0, 4)
-export const MORE_CATEGORIES = CATEGORIES.slice(4)
 
 export function categoryById(id: string): Category {
   return CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[CATEGORIES.length - 1]

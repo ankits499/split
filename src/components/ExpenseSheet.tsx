@@ -5,7 +5,7 @@ import type { GroupMember } from '../features/groups/hooks'
 import { useGroups } from '../features/groups/hooks'
 import { useAddExpense, useUpdateExpense } from '../features/expenses/hooks'
 import { splitEqually, splitByPercentage, formatCurrency, toIsoDate } from '../utils/money'
-import { POPULAR_CATEGORIES, MORE_CATEGORIES } from '../utils/categories'
+import { CATEGORIES } from '../utils/categories'
 
 type SplitMode = 'equal' | 'exact' | 'percent'
 
@@ -40,7 +40,6 @@ export function ExpenseSheet({
   const [amount, setAmount] = useState(expense ? String(expense.amount) : '')
   const [date, setDate] = useState(expense?.expense_date ?? toIsoDate(new Date()))
   const [category, setCategory] = useState(expense?.category ?? 'other')
-  const [showMoreCategories, setShowMoreCategories] = useState(false)
   const [paidBy, setPaidBy] = useState(expense?.paid_by ?? currentUserId)
   const [mode, setMode] = useState<SplitMode>(isEditing ? 'exact' : 'equal')
   const [included, setIncluded] = useState<Set<string>>(
@@ -150,8 +149,6 @@ export function ExpenseSheet({
     }
   }
 
-  const selectedMoreCategory = MORE_CATEGORIES.find((c) => c.id === category)
-
   return (
     <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/40" onClick={onClose} role="presentation">
       <form
@@ -234,16 +231,13 @@ export function ExpenseSheet({
         <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
           Category
         </p>
-        <div className="mb-4 flex flex-wrap gap-2">
-          {POPULAR_CATEGORIES.map((c) => (
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          {CATEGORIES.map((c) => (
             <button
               type="button"
               key={c.id}
-              onClick={() => {
-                setCategory(c.id)
-                setShowMoreCategories(false)
-              }}
-              className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
+              onClick={() => setCategory(c.id)}
+              className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
                 category === c.id
                   ? 'border-[var(--color-ledger)] bg-[var(--color-ledger)] text-white'
                   : 'border-[var(--color-line)] text-[var(--color-ink)]'
@@ -252,40 +246,7 @@ export function ExpenseSheet({
               {c.emoji} {c.label}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={() => setShowMoreCategories((v) => !v)}
-            className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-              selectedMoreCategory
-                ? 'border-[var(--color-ledger)] bg-[var(--color-ledger)] text-white'
-                : 'border-[var(--color-line)] text-[var(--color-ink)]'
-            }`}
-          >
-            {selectedMoreCategory ? `${selectedMoreCategory.emoji} ${selectedMoreCategory.label}` : 'More'}
-          </button>
         </div>
-
-        {showMoreCategories && (
-          <div className="animate-rise mb-4 flex flex-wrap gap-2 rounded-xl border border-[var(--color-line)] p-3">
-            {MORE_CATEGORIES.map((c) => (
-              <button
-                type="button"
-                key={c.id}
-                onClick={() => {
-                  setCategory(c.id)
-                  setShowMoreCategories(false)
-                }}
-                className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                  category === c.id
-                    ? 'border-[var(--color-ledger)] bg-[var(--color-ledger)] text-white'
-                    : 'border-[var(--color-line)] text-[var(--color-ink)]'
-                }`}
-              >
-                {c.emoji} {c.label}
-              </button>
-            ))}
-          </div>
-        )}
 
         <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
           Paid by
