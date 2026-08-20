@@ -37,7 +37,8 @@ export function HomePage() {
     else navigate('/groups')
   }
 
-  const recentExpenses = (summary?.recentActivity ?? []).filter((a) => a.kind === 'expense').slice(0, 5)
+  const recentExpenses = summary?.recentExpenses ?? []
+  const groupNameById = new Map((groups ?? []).map((g) => [g.id, g.name]))
 
   return (
     <div className="flex-1 pb-6">
@@ -190,20 +191,20 @@ export function HomePage() {
                   </Link>
                 </div>
                 <div className="space-y-2">
-                  {recentExpenses.map((entry) => {
-                    const e = entry.expense!
+                  {recentExpenses.map((e) => {
                     const delta = myExpenseDelta(e, userId)
+                    const groupName = groupNameById.get(e.group_id) ?? 'Group'
                     return (
                       <Link
                         key={e.id}
-                        to={`/groups/${entry.groupId}`}
+                        to={`/groups/${e.group_id}`}
                         className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
                       >
-                        <Avatar name={entry.groupName} size="sm" />
+                        <Avatar name={groupName} size="sm" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
                           <p className="truncate text-xs text-[var(--color-ink-muted)]">
-                            {entry.groupName} · {formatShortDate(e.expense_date)}
+                            {groupName} · {formatShortDate(e.expense_date)}
                           </p>
                         </div>
                         {Math.abs(delta) > 0.01 && (

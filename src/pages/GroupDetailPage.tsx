@@ -33,6 +33,11 @@ import { Avatar } from '../components/Avatar'
 
 type Tab = 'expenses' | 'balances' | 'settlements'
 
+// Renders these lists in pages instead of all at once — balances still need
+// the full fetched history for correctness, this only bounds DOM size as a
+// group's history grows over months of use.
+const PAGE_SIZE = 20
+
 export function GroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>()
   const { id: userId } = useLocalUser()
@@ -66,6 +71,8 @@ export function GroupDetailPage() {
   const [leaveError, setLeaveError] = useState<string | null>(null)
   const [confirmDeleteGroup, setConfirmDeleteGroup] = useState(false)
   const [showGroupMenu, setShowGroupMenu] = useState(false)
+  const [visibleExpenseCount, setVisibleExpenseCount] = useState(PAGE_SIZE)
+  const [visibleSettlementCount, setVisibleSettlementCount] = useState(PAGE_SIZE)
 
   const nameFor = (id: string) => group?.members.find((m) => m.user_id === id)?.name ?? 'Someone'
 
@@ -347,7 +354,7 @@ export function GroupDetailPage() {
           <p className="text-sm text-[var(--color-ink-muted)]">No expenses yet.</p>
         ) : (
           <div className="space-y-2">
-            {expenses.map((e) => {
+            {expenses.slice(0, visibleExpenseCount).map((e) => {
               const delta = myExpenseDelta(e, userId)
               return (
                 <div
@@ -390,6 +397,14 @@ export function GroupDetailPage() {
                 </div>
               )
             })}
+            {expenses.length > visibleExpenseCount && (
+              <button
+                onClick={() => setVisibleExpenseCount((c) => c + PAGE_SIZE)}
+                className="w-full rounded-xl border border-[var(--color-line)] py-2.5 text-sm font-medium text-[var(--color-ink)]"
+              >
+                Show more
+              </button>
+            )}
           </div>
         ))}
 
@@ -436,7 +451,7 @@ export function GroupDetailPage() {
           <p className="text-sm text-[var(--color-ink-muted)]">No settlements recorded yet.</p>
         ) : (
           <div className="space-y-2">
-            {settlements.map((s) => (
+            {settlements.slice(0, visibleSettlementCount).map((s) => (
               <div
                 key={s.id}
                 className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
@@ -455,6 +470,14 @@ export function GroupDetailPage() {
                 </span>
               </div>
             ))}
+            {settlements.length > visibleSettlementCount && (
+              <button
+                onClick={() => setVisibleSettlementCount((c) => c + PAGE_SIZE)}
+                className="w-full rounded-xl border border-[var(--color-line)] py-2.5 text-sm font-medium text-[var(--color-ink)]"
+              >
+                Show more
+              </button>
+            )}
           </div>
         ))}
 

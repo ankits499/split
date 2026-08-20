@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeftRight, Receipt } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
-import { useOverallSummary, type ActivityEntry } from '../features/dashboard/hooks'
+import { useActivityFeed, type ActivityEntry } from '../features/dashboard/hooks'
 import { Avatar } from '../components/Avatar'
 import { formatCurrency } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
@@ -30,9 +30,9 @@ function groupByDate(entries: ActivityEntry[]): [string, ActivityEntry[]][] {
 
 export function ActivityPage() {
   const { id: userId } = useLocalUser()
-  const { data: summary, isLoading } = useOverallSummary()
+  const { data, isLoading, isFetching, loadMore } = useActivityFeed()
 
-  const sections = groupByDate(summary?.recentActivity ?? [])
+  const sections = groupByDate(data?.entries ?? [])
 
   return (
     <div className="flex-1 px-4 pb-6">
@@ -106,6 +106,16 @@ export function ActivityPage() {
               </div>
             </div>
           ))}
+
+          {data?.hasMore && (
+            <button
+              onClick={loadMore}
+              disabled={isFetching}
+              className="w-full rounded-xl border border-[var(--color-line)] py-2.5 text-sm font-medium text-[var(--color-ink)] disabled:opacity-50"
+            >
+              {isFetching ? 'Loading…' : 'Load more'}
+            </button>
+          )}
         </div>
       )}
     </div>
