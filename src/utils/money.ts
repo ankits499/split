@@ -1,3 +1,7 @@
+export function firstName(name: string): string {
+  return name.trim().split(/\s+/)[0] ?? name
+}
+
 export function formatCurrency(amount: number, currency = 'INR'): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',

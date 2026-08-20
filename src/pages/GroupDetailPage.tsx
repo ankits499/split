@@ -26,7 +26,7 @@ import {
 import { useDeleteExpense, useExpenses, type Expense } from '../features/expenses/hooks'
 import { useAddSettlement, useSettlements } from '../features/settlements/hooks'
 import { computeNetBalances, myExpenseDelta, simplifyDebts, type Transfer } from '../utils/balances'
-import { formatCurrency, formatShortDate } from '../utils/money'
+import { firstName, formatCurrency, formatShortDate } from '../utils/money'
 import { ExpenseSheet } from '../components/ExpenseSheet'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Avatar } from '../components/Avatar'
@@ -371,7 +371,7 @@ export function GroupDetailPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
                     <p className="font-mono-nums truncate text-xs text-[var(--color-ink-muted)]">
-                      {nameFor(e.paid_by)} paid {formatCurrency(e.amount)} · {formatShortDate(e.expense_date)}
+                      {firstName(nameFor(e.paid_by))} paid {formatCurrency(e.amount)} · {formatShortDate(e.expense_date)}
                     </p>
                   </div>
                   {Math.abs(delta) > 0.01 && (
@@ -422,10 +422,10 @@ export function GroupDetailPage() {
                 >
                   <span className="flex items-center gap-1.5 text-sm text-[var(--color-ink)]">
                     <Avatar name={nameFor(t.from)} size="sm" />
-                    {nameFor(t.from)}
+                    {firstName(nameFor(t.from))}
                     <ArrowRight size={13} strokeWidth={2.25} className="text-[var(--color-ink-muted)]" />
                     <Avatar name={nameFor(t.to)} size="sm" />
-                    {nameFor(t.to)}
+                    {firstName(nameFor(t.to))}
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="font-mono-nums font-semibold text-[var(--color-ink)]">
@@ -459,7 +459,7 @@ export function GroupDetailPage() {
                 <Avatar name={nameFor(s.from_user)} size="md" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-[var(--color-ink)]">
-                    {nameFor(s.from_user)} paid {nameFor(s.to_user)}
+                    {firstName(nameFor(s.from_user))} paid {firstName(nameFor(s.to_user))}
                   </p>
                   <p className="text-xs text-[var(--color-ink-muted)]">
                     {new Date(s.created_at).toLocaleDateString()}
