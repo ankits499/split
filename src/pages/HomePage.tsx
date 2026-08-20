@@ -7,6 +7,7 @@ import { useGroups } from '../features/groups/hooks'
 import { useOverallSummary } from '../features/dashboard/hooks'
 import { useTheme } from '../features/theme'
 import { Avatar } from '../components/Avatar'
+import { CategoryIcon } from '../components/CategoryIcon'
 import { InstallPrompt } from '../components/InstallPrompt'
 import { OnlineIndicator } from '../components/OnlineIndicator'
 import { ExpenseSheet } from '../components/ExpenseSheet'
@@ -152,7 +153,7 @@ export function HomePage() {
                         to={`/groups/${e.group_id}`}
                         className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
                       >
-                        <Avatar name={groupName} size="sm" />
+                        <CategoryIcon category={e.category} size="sm" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
                           <p className="truncate text-xs text-[var(--color-ink-muted)]">

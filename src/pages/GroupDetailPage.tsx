@@ -37,6 +37,7 @@ import { categoryById } from '../utils/categories'
 import { ExpenseSheet } from '../components/ExpenseSheet'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Avatar } from '../components/Avatar'
+import { CategoryIcon } from '../components/CategoryIcon'
 import { DonutChart } from '../components/DonutChart'
 
 type Tab = 'expenses' | 'balances' | 'settlements' | 'history'
@@ -453,7 +454,7 @@ export function GroupDetailPage() {
                   }}
                   className="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 text-left shadow-[var(--shadow-card)] active:opacity-80"
                 >
-                  <Avatar name={nameFor(e.paid_by)} size="md" />
+                  <CategoryIcon category={e.category} size="md" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
                     <p className="font-mono-nums truncate text-xs text-[var(--color-ink-muted)]">
@@ -587,7 +588,7 @@ export function GroupDetailPage() {
                   key={e.id}
                   className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
                 >
-                  <Avatar name={nameFor(e.paid_by)} size="md" />
+                  <CategoryIcon category={e.category} size="md" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
                     <p className="font-mono-nums truncate text-xs text-[var(--color-ink-muted)]">

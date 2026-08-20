@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeftRight, Receipt } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
 import { useActivityFeed, type ActivityEntry } from '../features/dashboard/hooks'
-import { Avatar } from '../components/Avatar'
+import { CategoryIcon } from '../components/CategoryIcon'
 import { formatCurrency } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
 
@@ -61,7 +61,7 @@ export function ActivityPage() {
                       to={`/groups/${entry.groupId}`}
                       className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
                     >
-                      <Avatar name={entry.groupName} size="md" />
+                      <CategoryIcon category={entry.expense.category} size="md" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-[var(--color-ink)]">
                           {entry.expense.description}
