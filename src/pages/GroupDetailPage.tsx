@@ -7,7 +7,6 @@ import {
   UserPlus,
   UserMinus,
   LogOut,
-  Plus,
   AlertCircle,
   Pencil,
   MoreVertical,
@@ -49,7 +48,7 @@ export function GroupDetailPage() {
   const { id: userId } = useLocalUser()
   const navigate = useNavigate()
   const location = useLocation()
-  const routeState = location.state as { openExpense?: boolean; tab?: Tab } | null
+  const routeState = location.state as { tab?: Tab } | null
 
   const { data: group, isLoading: groupLoading } = useGroup(groupId)
   const { data: expenses, isLoading: expensesLoading } = useExpenses(groupId, group?.cycle_number)
@@ -63,7 +62,6 @@ export function GroupDetailPage() {
   const deleteGroup = useDeleteGroup()
 
   const [tab, setTab] = useState<Tab>(routeState?.tab ?? 'expenses')
-  const [showAddExpense, setShowAddExpense] = useState(!!routeState?.openExpense)
   const [editTarget, setEditTarget] = useState<Expense | null>(null)
   const [showAddMember, setShowAddMember] = useState(false)
   const [memberEmail, setMemberEmail] = useState('')
@@ -98,7 +96,6 @@ export function GroupDetailPage() {
 
   useEffect(() => {
     if (routeState?.tab) setTab(routeState.tab)
-    if (routeState?.openExpense) setShowAddExpense(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key])
 
@@ -555,23 +552,6 @@ export function GroupDetailPage() {
           </div>
         ))}
       </div>
-
-      <button
-        onClick={() => setShowAddExpense(true)}
-        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-ledger)] text-white shadow-lg"
-        aria-label="Add expense"
-      >
-        <Plus size={26} strokeWidth={2.25} />
-      </button>
-
-      {showAddExpense && (
-        <ExpenseSheet
-          groupId={groupId!}
-          members={group.members}
-          currentUserId={userId}
-          onClose={() => setShowAddExpense(false)}
-        />
-      )}
 
       {editTarget && (
         <ExpenseSheet

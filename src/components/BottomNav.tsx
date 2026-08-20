@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useMatch, useNavigate } from 'react-router-dom'
 import { House, Users, Clock, CircleUser, Plus, Receipt, UsersRound } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
+import { useGroup } from '../features/groups/hooks'
 import { ExpenseSheet } from './ExpenseSheet'
 
 const SIDE_ITEMS_LEFT = [
@@ -35,6 +36,15 @@ export function BottomNav() {
   const [showExpenseSheet, setShowExpenseSheet] = useState(false)
   const { id: userId } = useLocalUser()
   const navigate = useNavigate()
+
+  const groupMatch = useMatch('/groups/:groupId')
+  const inGroupId = groupMatch && groupMatch.params.groupId !== 'new' ? groupMatch.params.groupId : undefined
+  const { data: currentGroup } = useGroup(inGroupId)
+
+  const handleCenterButton = () => {
+    if (currentGroup) setShowExpenseSheet(true)
+    else setShowQuickAdd((v) => !v)
+  }
 
   return (
     <>
@@ -74,7 +84,14 @@ export function BottomNav() {
         </>
       )}
 
-      {showExpenseSheet && <ExpenseSheet currentUserId={userId} onClose={() => setShowExpenseSheet(false)} />}
+      {showExpenseSheet && (
+        <ExpenseSheet
+          groupId={currentGroup?.id}
+          members={currentGroup?.members}
+          currentUserId={userId}
+          onClose={() => setShowExpenseSheet(false)}
+        />
+      )}
 
       <nav
         className="fixed inset-x-0 bottom-0 z-10 flex items-center border-t border-[var(--color-line)] bg-[var(--color-surface)]"
@@ -86,9 +103,9 @@ export function BottomNav() {
 
         <div className="flex flex-1 justify-center">
           <button
-            onClick={() => setShowQuickAdd((v) => !v)}
-            aria-label="Quick add"
-            aria-expanded={showQuickAdd}
+            onClick={handleCenterButton}
+            aria-label={currentGroup ? 'Add expense' : 'Quick add'}
+            aria-expanded={currentGroup ? undefined : showQuickAdd}
             className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-ledger)] text-white shadow-lg active:opacity-90"
           >
             <Plus size={26} strokeWidth={2.25} />
