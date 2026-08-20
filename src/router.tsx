@@ -4,6 +4,7 @@ import { HomePage } from './pages/HomePage'
 import { GroupsListPage } from './pages/GroupsListPage'
 import { NewGroupPage } from './pages/NewGroupPage'
 import { GroupDetailPage } from './pages/GroupDetailPage'
+import { FriendDetailPage } from './pages/FriendDetailPage'
 import { ActivityPage } from './pages/ActivityPage'
 import { ProfilePage } from './pages/ProfilePage'
 
@@ -17,6 +18,7 @@ export const router = createBrowserRouter(
         { path: 'groups', element: <GroupsListPage /> },
         { path: 'groups/new', element: <NewGroupPage /> },
         { path: 'groups/:groupId', element: <GroupDetailPage /> },
+        { path: 'friends/:friendId', element: <FriendDetailPage /> },
         { path: 'activity', element: <ActivityPage /> },
         { path: 'profile', element: <ProfilePage /> },
       ],

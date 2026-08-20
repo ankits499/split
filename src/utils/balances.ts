@@ -36,6 +36,31 @@ export function computeNetBalances(
   return net
 }
 
+/** Direct 1:1 balance between two specific users, independent of group size
+ *  or the simplified-transfer graph. Positive = otherId owes meId. */
+export function pairwiseNet(
+  expenses: ExpenseLike[],
+  settlements: SettlementLike[],
+  meId: string,
+  otherId: string
+): number {
+  let net = 0
+  for (const expense of expenses) {
+    if (expense.paid_by === meId) {
+      const split = expense.splits.find((s) => s.user_id === otherId)
+      if (split) net += split.share
+    } else if (expense.paid_by === otherId) {
+      const split = expense.splits.find((s) => s.user_id === meId)
+      if (split) net -= split.share
+    }
+  }
+  for (const s of settlements) {
+    if (s.from_user === meId && s.to_user === otherId) net += s.amount
+    else if (s.from_user === otherId && s.to_user === meId) net -= s.amount
+  }
+  return Math.round(net * 100) / 100
+}
+
 /** How much a single expense shifted one user's balance: positive = they're owed back, negative = they owe. */
 export function myExpenseDelta(
   expense: { paid_by: string; amount: number; splits: { user_id: string; share: number }[] },

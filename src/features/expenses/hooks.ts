@@ -20,7 +20,7 @@ export interface Expense {
   splits: Split[]
 }
 
-function mapExpenseRow(e: {
+export function mapExpenseRow(e: {
   id: string
   group_id: string
   description: string
@@ -46,7 +46,7 @@ function mapExpenseRow(e: {
   }
 }
 
-const EXPENSE_COLUMNS =
+export const EXPENSE_COLUMNS =
   'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, expense_splits(user_id, share)'
 
 export function useExpenses(groupId: string | undefined, cycle: number | undefined) {
