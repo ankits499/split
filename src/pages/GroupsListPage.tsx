@@ -7,7 +7,7 @@ export function GroupsListPage() {
   const { data: groups, isLoading } = useGroups()
 
   return (
-    <div className="flex-1 px-4 pb-6">
+    <div className="flex-1 px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <div className="flex items-center justify-between pt-6 pb-4">
         <h1 className="text-lg font-semibold text-[var(--color-ink)]">Groups</h1>
         <Link

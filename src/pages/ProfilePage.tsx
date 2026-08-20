@@ -25,7 +25,7 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="flex-1 px-4 pb-6">
+    <div className="flex-1 px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <h1 className="pt-6 pb-4 text-lg font-semibold text-[var(--color-ink)]">Profile</h1>
 
       <form onSubmit={save} className="space-y-3">

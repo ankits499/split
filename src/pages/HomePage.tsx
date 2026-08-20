@@ -41,7 +41,7 @@ export function HomePage() {
   const groupNameById = new Map((groups ?? []).map((g) => [g.id, g.name]))
 
   return (
-    <div className="flex-1 pb-6">
+    <div className="flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <div className="flex items-center justify-between px-4 pt-6 pb-4">
         <div>
           <h1 className="text-lg font-medium text-[var(--color-ink)]">

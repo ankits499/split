@@ -147,7 +147,7 @@ export function GroupDetailPage() {
   ]
 
   return (
-    <div className="flex-1 px-4 pb-24">
+    <div className="flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))]">
       <div className="flex items-center gap-3 pt-6 pb-4">
         <Link to="/groups" aria-label="Back to groups" className="text-[var(--color-ink-muted)]">
           <ArrowLeft size={20} strokeWidth={2.25} />

@@ -77,7 +77,7 @@ export function BottomNav() {
       {showExpenseSheet && <ExpenseSheet currentUserId={userId} onClose={() => setShowExpenseSheet(false)} />}
 
       <nav
-        className="sticky bottom-0 z-10 flex items-center border-t border-[var(--color-line)] bg-[var(--color-surface)]"
+        className="fixed inset-x-0 bottom-0 z-10 flex items-center border-t border-[var(--color-line)] bg-[var(--color-surface)]"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {SIDE_ITEMS_LEFT.map((item) => (
