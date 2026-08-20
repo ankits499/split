@@ -56,7 +56,6 @@ export function useOverallSummary() {
             )
             .in('group_id', groupIds)
             .gte('expense_date', cutoffDate)
-            .order('expense_date', { ascending: false })
             .order('created_at', { ascending: false }),
         ])
       if (balanceErr) throw balanceErr
