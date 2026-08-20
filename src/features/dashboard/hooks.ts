@@ -52,7 +52,7 @@ export function useOverallSummary() {
           supabase
             .from('expenses')
             .select(
-              'id, group_id, description, amount, paid_by, expense_date, created_at, category, expense_splits(user_id, share)'
+              'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, expense_splits(user_id, share)'
             )
             .in('group_id', groupIds)
             .gte('expense_date', cutoffDate)
@@ -70,6 +70,7 @@ export function useOverallSummary() {
         expense_date: e.expense_date,
         created_at: e.created_at,
         category: e.category,
+        cycle: e.cycle,
         splits: e.expense_splits.map((s: { user_id: string; share: number }) => ({
           user_id: s.user_id,
           share: Number(s.share),
@@ -118,7 +119,7 @@ export function useSpendingHistory() {
       const { data: expenseRows, error } = await supabase
         .from('expenses')
         .select(
-          'id, group_id, description, amount, paid_by, expense_date, created_at, category, expense_splits(user_id, share)'
+          'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, expense_splits(user_id, share)'
         )
         .in('group_id', groupIds)
         .gte('expense_date', cutoffDate)
@@ -134,6 +135,7 @@ export function useSpendingHistory() {
         expense_date: e.expense_date,
         created_at: e.created_at,
         category: e.category,
+        cycle: e.cycle,
         splits: e.expense_splits.map((s: { user_id: string; share: number }) => ({
           user_id: s.user_id,
           share: Number(s.share),
@@ -174,14 +176,14 @@ export function useActivityFeed() {
           supabase
             .from('expenses')
             .select(
-              'id, group_id, description, amount, paid_by, expense_date, created_at, category, expense_splits(user_id, share)'
+              'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, expense_splits(user_id, share)'
             )
             .in('group_id', groupIds)
             .order('created_at', { ascending: false })
             .limit(limit),
           supabase
             .from('settlements')
-            .select('id, group_id, from_user, to_user, amount, created_by, created_at')
+            .select('id, group_id, from_user, to_user, amount, created_by, created_at, cycle')
             .in('group_id', groupIds)
             .order('created_at', { ascending: false })
             .limit(limit),
@@ -200,6 +202,7 @@ export function useActivityFeed() {
         expense_date: e.expense_date,
         created_at: e.created_at,
         category: e.category,
+        cycle: e.cycle,
         splits: e.expense_splits.map((s: { user_id: string; share: number }) => ({
           user_id: s.user_id,
           share: Number(s.share),

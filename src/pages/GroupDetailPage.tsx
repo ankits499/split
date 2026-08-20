@@ -23,7 +23,13 @@ import {
   useRenameGroup,
   type GroupMember,
 } from '../features/groups/hooks'
-import { useDeleteExpense, useExpenses, type Expense } from '../features/expenses/hooks'
+import {
+  useCycleExpenses,
+  useDeleteExpense,
+  useExpenses,
+  useGroupCycleSummaries,
+  type Expense,
+} from '../features/expenses/hooks'
 import { useAddSettlement, useSettlements } from '../features/settlements/hooks'
 import { computeNetBalances, myExpenseDelta, simplifyDebts, type Transfer } from '../utils/balances'
 import { firstName, formatCurrency, formatShortDate } from '../utils/money'
@@ -31,7 +37,7 @@ import { ExpenseSheet } from '../components/ExpenseSheet'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Avatar } from '../components/Avatar'
 
-type Tab = 'expenses' | 'balances' | 'settlements'
+type Tab = 'expenses' | 'balances' | 'settlements' | 'history'
 
 // Renders these lists in pages instead of all at once — balances still need
 // the full fetched history for correctness, this only bounds DOM size as a
@@ -46,8 +52,9 @@ export function GroupDetailPage() {
   const routeState = location.state as { openExpense?: boolean; tab?: Tab } | null
 
   const { data: group, isLoading: groupLoading } = useGroup(groupId)
-  const { data: expenses, isLoading: expensesLoading } = useExpenses(groupId)
-  const { data: settlements } = useSettlements(groupId)
+  const { data: expenses, isLoading: expensesLoading } = useExpenses(groupId, group?.cycle_number)
+  const { data: settlements } = useSettlements(groupId, group?.cycle_number)
+  const { data: cycleSummaries } = useGroupCycleSummaries(groupId, group?.cycle_number)
   const deleteExpense = useDeleteExpense(groupId!)
   const addSettlement = useAddSettlement(groupId!)
   const addMember = useAddMember(groupId!)
@@ -73,6 +80,8 @@ export function GroupDetailPage() {
   const [showGroupMenu, setShowGroupMenu] = useState(false)
   const [visibleExpenseCount, setVisibleExpenseCount] = useState(PAGE_SIZE)
   const [visibleSettlementCount, setVisibleSettlementCount] = useState(PAGE_SIZE)
+  const [historyCycle, setHistoryCycle] = useState<number | null>(null)
+  const { data: cycleExpenses, isLoading: cycleExpensesLoading } = useCycleExpenses(groupId, historyCycle ?? undefined)
 
   const nameFor = (id: string) => group?.members.find((m) => m.user_id === id)?.name ?? 'Someone'
 
@@ -144,6 +153,7 @@ export function GroupDetailPage() {
     { id: 'expenses', label: 'Expenses' },
     { id: 'balances', label: 'Balances' },
     { id: 'settlements', label: 'Settlements' },
+    { id: 'history', label: 'History' },
   ]
 
   return (
@@ -335,7 +345,10 @@ export function GroupDetailPage() {
         {TABS.map((t) => (
           <button
             key={t.id}
-            onClick={() => setTab(t.id)}
+            onClick={() => {
+              setTab(t.id)
+              setHistoryCycle(null)
+            }}
             className={`-mb-px border-b-2 px-3 py-2 text-sm font-semibold transition-colors ${
               tab === t.id
                 ? 'border-[var(--color-ledger)] text-[var(--color-ledger)]'
@@ -478,6 +491,64 @@ export function GroupDetailPage() {
                 Show more
               </button>
             )}
+          </div>
+        ))}
+
+      {tab === 'history' &&
+        (historyCycle !== null ? (
+          <div className="space-y-2">
+            <button
+              onClick={() => setHistoryCycle(null)}
+              className="mb-1 flex items-center gap-1 text-xs font-medium text-[var(--color-ink-muted)]"
+            >
+              <ArrowLeft size={13} strokeWidth={2.25} /> Back to History
+            </button>
+            {cycleExpensesLoading ? (
+              <p className="text-sm text-[var(--color-ink-muted)]">Loading…</p>
+            ) : !cycleExpenses || cycleExpenses.length === 0 ? (
+              <p className="text-sm text-[var(--color-ink-muted)]">No expenses in this cycle.</p>
+            ) : (
+              cycleExpenses.map((e) => (
+                <div
+                  key={e.id}
+                  className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
+                >
+                  <Avatar name={nameFor(e.paid_by)} size="md" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
+                    <p className="font-mono-nums truncate text-xs text-[var(--color-ink-muted)]">
+                      {firstName(nameFor(e.paid_by))} paid {formatCurrency(e.amount)} · {formatShortDate(e.expense_date)}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : !cycleSummaries || cycleSummaries.length === 0 ? (
+          <p className="text-sm text-[var(--color-ink-muted)]">
+            No settled cycles yet. Past expenses land here once a group is fully settled up.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {cycleSummaries.map((c) => (
+              <button
+                key={c.cycle}
+                onClick={() => setHistoryCycle(c.cycle)}
+                className="flex w-full items-center justify-between rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 text-left shadow-[var(--shadow-card)]"
+              >
+                <div>
+                  <p className="text-sm font-medium text-[var(--color-ink)]">
+                    {formatShortDate(c.startDate)} – {formatShortDate(c.endDate)}
+                  </p>
+                  <p className="text-xs text-[var(--color-ink-muted)]">
+                    {c.expenseCount} {c.expenseCount === 1 ? 'expense' : 'expenses'}
+                  </p>
+                </div>
+                <span className="font-mono-nums font-semibold text-[var(--color-ink)]">
+                  {formatCurrency(c.total)}
+                </span>
+              </button>
+            ))}
           </div>
         ))}
 

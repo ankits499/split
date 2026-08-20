@@ -11,6 +11,7 @@ export interface GroupSummary {
   id: string
   name: string
   created_by: string
+  cycle_number: number
   members: GroupMember[]
 }
 
@@ -25,7 +26,7 @@ async function fetchGroups(userId: string): Promise<GroupSummary[]> {
 
   const { data: groups, error: groupErr } = await supabase
     .from('groups')
-    .select('id, name, created_by')
+    .select('id, name, created_by, cycle_number')
     .in('id', groupIds)
   if (groupErr) throw groupErr
 
@@ -39,6 +40,7 @@ async function fetchGroups(userId: string): Promise<GroupSummary[]> {
     id: g.id,
     name: g.name,
     created_by: g.created_by,
+    cycle_number: g.cycle_number,
     members: allMembers
       .filter((m) => m.group_id === g.id)
       // @ts-expect-error joined relation shape
@@ -62,7 +64,7 @@ export function useGroup(groupId: string | undefined) {
     queryFn: async (): Promise<GroupSummary> => {
       const { data: group, error } = await supabase
         .from('groups')
-        .select('id, name, created_by')
+        .select('id, name, created_by, cycle_number')
         .eq('id', groupId!)
         .single()
       if (error) throw error
@@ -77,6 +79,7 @@ export function useGroup(groupId: string | undefined) {
         id: group.id,
         name: group.name,
         created_by: group.created_by,
+        cycle_number: group.cycle_number,
         members: members.map((m) => ({
           user_id: m.user_id,
           // @ts-expect-error joined relation shape
