@@ -8,8 +8,11 @@ function systemTheme(): Theme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+const THEME_COLOR: Record<Theme, string> = { light: '#efeee7', dark: '#16181d' }
+
 function applyTheme(theme: Theme) {
   document.documentElement.setAttribute('data-theme', theme)
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[theme])
 }
 
 interface ThemeContextValue {
