@@ -5,17 +5,12 @@ import { useAuth } from '../auth/AuthProvider'
 import { useGroups } from '../groups/hooks'
 import type { Expense } from '../expenses/hooks'
 import type { Settlement } from '../settlements/hooks'
+import { SPENDING_WINDOW_DAYS } from '../../utils/spending'
 
-// How far back Home's "recent" widgets (spending chart, this-month-by-category,
-// recent expenses) look. Balances below are NOT limited by this — those come
-// from a SQL aggregate over full history so they stay correct regardless of
-// how old the app's data gets.
+// How far back Home's "recent" widgets (recent expenses list) look. Balances
+// below are NOT limited by this — those come from a SQL aggregate over full
+// history so they stay correct regardless of how old the app's data gets.
 const RECENT_WINDOW_DAYS = 45
-
-export interface CategoryTotal {
-  category: string
-  total: number
-}
 
 export interface OverallSummary {
   totalBalance: number
@@ -23,9 +18,6 @@ export interface OverallSummary {
   owe: number
   netByGroup: Map<string, number>
   recentExpenses: Expense[]
-  chartExpenses: Expense[]
-  monthlyTotal: number
-  monthlyByCategory: CategoryTotal[]
 }
 
 export function useOverallSummary() {
@@ -46,9 +38,6 @@ export function useOverallSummary() {
           owe: 0,
           netByGroup: new Map(),
           recentExpenses: [],
-          chartExpenses: [],
-          monthlyTotal: 0,
-          monthlyByCategory: [],
         }
       }
 
@@ -97,30 +86,59 @@ export function useOverallSummary() {
         else owe += -net
       }
 
-      const monthPrefix = new Date().toISOString().slice(0, 7)
-      const categoryTotals = new Map<string, number>()
-      let monthlyTotal = 0
-      for (const e of expenses) {
-        if (!e.expense_date.startsWith(monthPrefix)) continue
-        const myShare = e.splits.find((s) => s.user_id === userId)?.share ?? 0
-        if (myShare <= 0) continue
-        categoryTotals.set(e.category, (categoryTotals.get(e.category) ?? 0) + myShare)
-        monthlyTotal += myShare
-      }
-      const monthlyByCategory: CategoryTotal[] = [...categoryTotals.entries()]
-        .map(([category, total]) => ({ category, total: Math.round(total * 100) / 100 }))
-        .sort((a, b) => b.total - a.total)
-
       return {
         totalBalance: Math.round((owed - owe) * 100) / 100,
         owed: Math.round(owed * 100) / 100,
         owe: Math.round(owe * 100) / 100,
         netByGroup,
         recentExpenses: expenses.slice(0, 5),
-        chartExpenses: expenses,
-        monthlyTotal: Math.round(monthlyTotal * 100) / 100,
-        monthlyByCategory,
       }
+    },
+    enabled: !!session?.user && !!groups,
+  })
+}
+
+/** Raw expense history over `SPENDING_WINDOW_DAYS`, used by the Profile page's
+ *  spending charts — `computeSpendingBreakdown` slices/buckets this per range
+ *  entirely client-side so switching ranges doesn't refetch. */
+export function useSpendingHistory() {
+  const { session } = useAuth()
+  const { data: groups } = useGroups()
+  const groupIds = (groups ?? []).map((g) => g.id)
+
+  return useQuery({
+    queryKey: ['spending-history', session?.user?.id, groupIds.join(',')],
+    queryFn: async (): Promise<Expense[]> => {
+      if (groupIds.length === 0) return []
+
+      const cutoff = new Date()
+      cutoff.setDate(cutoff.getDate() - SPENDING_WINDOW_DAYS)
+      const cutoffDate = cutoff.toISOString().slice(0, 10)
+
+      const { data: expenseRows, error } = await supabase
+        .from('expenses')
+        .select(
+          'id, group_id, description, amount, paid_by, expense_date, created_at, category, expense_splits(user_id, share)'
+        )
+        .in('group_id', groupIds)
+        .gte('expense_date', cutoffDate)
+        .order('expense_date', { ascending: false })
+      if (error) throw error
+
+      return expenseRows.map((e) => ({
+        id: e.id,
+        group_id: e.group_id,
+        description: e.description,
+        amount: Number(e.amount),
+        paid_by: e.paid_by,
+        expense_date: e.expense_date,
+        created_at: e.created_at,
+        category: e.category,
+        splits: e.expense_splits.map((s: { user_id: string; share: number }) => ({
+          user_id: s.user_id,
+          share: Number(s.share),
+        })),
+      }))
     },
     enabled: !!session?.user && !!groups,
   })

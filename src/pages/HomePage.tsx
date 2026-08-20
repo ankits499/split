@@ -8,12 +8,9 @@ import { useOverallSummary } from '../features/dashboard/hooks'
 import { useTheme } from '../features/theme'
 import { Avatar } from '../components/Avatar'
 import { InstallPrompt } from '../components/InstallPrompt'
-import { SpendingChart } from '../components/SpendingChart'
-import { DonutChart } from '../components/DonutChart'
 import { ExpenseSheet } from '../components/ExpenseSheet'
 import { formatCurrency, formatShortDate } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
-import { categoryById } from '../utils/categories'
 
 function greeting() {
   const hour = new Date().getHours()
@@ -129,56 +126,6 @@ export function HomePage() {
                 Add group
               </Link>
             </div>
-
-            {summary && summary.chartExpenses.length > 0 && (
-              <>
-                <p className="mt-6 mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
-                  Spending, last 14 days
-                </p>
-                <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)]">
-                  <SpendingChart expenses={summary.chartExpenses} />
-                </div>
-              </>
-            )}
-
-            {summary && summary.monthlyByCategory.length > 0 && (
-              <>
-                <p className="mt-6 mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
-                  This month by category
-                </p>
-                <div className="flex items-center gap-4 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)]">
-                  <DonutChart
-                    segments={summary.monthlyByCategory.map((c) => ({
-                      value: c.total,
-                      color: categoryById(c.category).color,
-                    }))}
-                    centerValue={formatCurrency(summary.monthlyTotal)}
-                    centerLabel="This month"
-                  />
-                  <div className="min-w-0 flex-1 space-y-1.5">
-                    {summary.monthlyByCategory.map((c) => {
-                      const cat = categoryById(c.category)
-                      return (
-                        <div key={c.category} className="flex items-center justify-between gap-2 text-xs">
-                          <span className="flex min-w-0 items-center gap-1.5 truncate text-[var(--color-ink)]">
-                            <span
-                              className="h-2.5 w-2.5 shrink-0 rounded-full"
-                              style={{ backgroundColor: cat.color }}
-                            />
-                            <span className="truncate">
-                              {cat.emoji} {cat.label}
-                            </span>
-                          </span>
-                          <span className="font-mono-nums shrink-0 text-[var(--color-ink-muted)]">
-                            {formatCurrency(c.total)}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
 
             {recentExpenses.length > 0 && (
               <>
