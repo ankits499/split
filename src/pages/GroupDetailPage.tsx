@@ -157,8 +157,9 @@ export function GroupDetailPage() {
   ]
 
   return (
-    <div className="flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))]">
-      <div className="flex items-center gap-3 pt-6 pb-4">
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="shrink-0 px-4 pt-6">
+      <div className="flex items-center gap-3 pb-4">
         <Link to="/groups" aria-label="Back to groups" className="text-[var(--color-ink-muted)]">
           <ArrowLeft size={20} strokeWidth={2.25} />
         </Link>
@@ -359,7 +360,9 @@ export function GroupDetailPage() {
           </button>
         ))}
       </div>
+      </div>
 
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(7rem+env(safe-area-inset-bottom))]">
       {tab === 'expenses' &&
         (expensesLoading ? (
           <p className="text-sm text-[var(--color-ink-muted)]">Loading…</p>
@@ -551,6 +554,7 @@ export function GroupDetailPage() {
             ))}
           </div>
         ))}
+      </div>
 
       <button
         onClick={() => setShowAddExpense(true)}

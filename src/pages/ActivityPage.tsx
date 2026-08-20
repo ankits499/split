@@ -35,9 +35,10 @@ export function ActivityPage() {
   const sections = groupByDate(data?.entries ?? [])
 
   return (
-    <div className="flex-1 px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-      <h1 className="pt-6 pb-4 text-lg font-semibold text-[var(--color-ink)]">Activity</h1>
+    <div className="flex flex-col overflow-hidden">
+      <h1 className="shrink-0 px-4 pt-6 pb-4 text-lg font-semibold text-[var(--color-ink)]">Activity</h1>
 
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       {isLoading ? (
         <p className="py-8 text-center text-sm text-[var(--color-ink-muted)]">Loading…</p>
       ) : sections.length === 0 ? (
@@ -118,6 +119,7 @@ export function ActivityPage() {
           )}
         </div>
       )}
+      </div>
     </div>
   )
 }

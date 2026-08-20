@@ -38,8 +38,8 @@ export function HomePage() {
   const groupNameById = new Map((groups ?? []).map((g) => [g.id, g.name]))
 
   return (
-    <div className="flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-      <div className="flex items-center justify-between px-4 pt-6 pb-4">
+    <div className="flex flex-col overflow-hidden">
+      <div className="shrink-0 flex items-center justify-between px-4 pt-6 pb-4">
         <div>
           <h1 className="text-lg font-medium text-[var(--color-ink)]">
             Hi, {name} <span aria-hidden>👋</span>
@@ -65,6 +65,7 @@ export function HomePage() {
         </div>
       </div>
 
+      <div className="flex-1 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <InstallPrompt />
 
       <div className="px-4">
@@ -172,6 +173,7 @@ export function HomePage() {
             )}
           </>
         )}
+      </div>
       </div>
 
       {showAddExpense && (

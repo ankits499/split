@@ -103,11 +103,17 @@ textarea {
   inset: 0;
   max-width: 480px;
   margin: 0 auto;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   background: var(--color-bg);
+}
+
+/* Each page owns its own scroll region (its header stays fixed while its
+   list scrolls) instead of scrolling as one long page under #root. */
+#root > * {
+  min-height: 0;
+  flex: 1;
 }
 
 @media (min-width: 900px) {
