@@ -82,6 +82,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* iOS Safari auto-zooms on focus for any input under 16px, then doesn't
+   zoom back out — inputs inherit body's 15px font via Tailwind's preflight
+   (`font: inherit`), so bump them back up past the threshold. */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
 #root {
   max-width: 480px;
   margin: 0 auto;
