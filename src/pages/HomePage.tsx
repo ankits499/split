@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeftRight, Plus, Receipt, UsersRound } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
 import { useGroups } from '../features/groups/hooks'
 import { useOverallSummary } from '../features/dashboard/hooks'
+import { useTheme } from '../features/theme'
 import { Avatar } from '../components/Avatar'
 import { InstallPrompt } from '../components/InstallPrompt'
 import { SpendingChart } from '../components/SpendingChart'
@@ -24,6 +26,7 @@ export function HomePage() {
   const { id: userId, name } = useLocalUser()
   const { data: groups } = useGroups()
   const { data: summary, isLoading } = useOverallSummary()
+  const { theme, toggle: toggleTheme } = useTheme()
   const navigate = useNavigate()
 
   const [showAddExpense, setShowAddExpense] = useState(false)
@@ -45,13 +48,23 @@ export function HomePage() {
           </h1>
           <p className="text-xs text-[var(--color-ink-muted)]">{greeting()}, here's your overview</p>
         </div>
-        <Link
-          to="/profile"
-          aria-label="Profile"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[var(--shadow-card)]"
-        >
-          <Avatar name={name} size="sm" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[var(--shadow-card)]"
+          >
+            {theme === 'dark' ? <Moon size={18} strokeWidth={2.25} /> : <Sun size={18} strokeWidth={2.25} />}
+          </button>
+          <Link
+            to="/profile"
+            aria-label="Profile"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-ink)] shadow-[var(--shadow-card)]"
+          >
+            <Avatar name={name} size="sm" />
+          </Link>
+        </div>
       </div>
 
       <InstallPrompt />
