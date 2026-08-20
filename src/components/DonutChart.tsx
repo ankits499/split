@@ -1,3 +1,5 @@
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
+
 export function DonutChart({
   segments,
   size = 128,
@@ -12,49 +14,42 @@ export function DonutChart({
   centerLabel: string
 }) {
   const total = segments.reduce((a, s) => a + s.value, 0)
-  const r = (size - thickness) / 2
-  const c = 2 * Math.PI * r
-  let offset = 0
+  const outerRadius = size / 2
+  const innerRadius = outerRadius - thickness
+
+  const data = total <= 0 ? [{ value: 1, color: 'var(--color-line)' }] : segments.filter((s) => s.value > 0)
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-      <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
-        {total <= 0 ? (
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-line)" strokeWidth={thickness} />
-        ) : (
-          segments
-            .filter((s) => s.value > 0)
-            .map((s, i) => {
-              const len = (s.value / total) * c
-              const el = (
-                <circle
-                  key={i}
-                  cx={size / 2}
-                  cy={size / 2}
-                  r={r}
-                  fill="none"
-                  stroke={s.color}
-                  strokeWidth={thickness}
-                  strokeDasharray={`${len} ${c - len}`}
-                  strokeDashoffset={-offset}
-                />
-              )
-              offset += len
-              return el
-            })
-        )}
-      </g>
-      <text
-        x="50%"
-        y="47%"
-        textAnchor="middle"
-        style={{ fill: 'var(--color-ink)', fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-mono)' }}
-      >
-        {centerValue}
-      </text>
-      <text x="50%" y="63%" textAnchor="middle" style={{ fill: 'var(--color-ink-muted)', fontSize: 9.5 }}>
-        {centerLabel}
-      </text>
-    </svg>
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            innerRadius={innerRadius}
+            outerRadius={outerRadius}
+            startAngle={90}
+            endAngle={-270}
+            stroke="none"
+            isAnimationActive={false}
+          >
+            {data.map((d, i) => (
+              <Cell key={i} fill={d.color} />
+            ))}
+          </Pie>
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+        <span
+          className="font-mono-nums font-bold text-[var(--color-ink)]"
+          style={{ fontSize: 15 }}
+        >
+          {centerValue}
+        </span>
+        <span className="mt-0.5 text-[var(--color-ink-muted)]" style={{ fontSize: 9.5 }}>
+          {centerLabel}
+        </span>
+      </div>
+    </div>
   )
 }
