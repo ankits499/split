@@ -32,9 +32,12 @@ import {
 import { useAddSettlement, useSettlements } from '../features/settlements/hooks'
 import { computeNetBalances, myExpenseDelta, simplifyDebts, type Transfer } from '../utils/balances'
 import { firstName, formatCurrency, formatShortDate } from '../utils/money'
+import { computeGroupCategoryBreakdown, type SpendingRange } from '../utils/spending'
+import { categoryById } from '../utils/categories'
 import { ExpenseSheet } from '../components/ExpenseSheet'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Avatar } from '../components/Avatar'
+import { DonutChart } from '../components/DonutChart'
 
 type Tab = 'expenses' | 'balances' | 'settlements' | 'history'
 
@@ -42,6 +45,12 @@ type Tab = 'expenses' | 'balances' | 'settlements' | 'history'
 // the full fetched history for correctness, this only bounds DOM size as a
 // group's history grows over months of use.
 const PAGE_SIZE = 20
+
+const CHART_RANGES: { id: SpendingRange; label: string }[] = [
+  { id: '1w', label: '1W' },
+  { id: 'mtd', label: 'MTD' },
+  { id: '3m', label: '3M' },
+]
 
 export function GroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>()
@@ -80,8 +89,14 @@ export function GroupDetailPage() {
   const [visibleSettlementCount, setVisibleSettlementCount] = useState(PAGE_SIZE)
   const [historyCycle, setHistoryCycle] = useState<number | null>(null)
   const { data: cycleExpenses, isLoading: cycleExpensesLoading } = useCycleExpenses(groupId, historyCycle ?? undefined)
+  const [chartRange, setChartRange] = useState<SpendingRange>('mtd')
 
   const nameFor = (id: string) => group?.members.find((m) => m.user_id === id)?.name ?? 'Someone'
+
+  const chartBreakdown = useMemo(
+    () => computeGroupCategoryBreakdown(expenses ?? [], chartRange),
+    [expenses, chartRange]
+  )
 
   const net = useMemo(
     () => computeNetBalances(expenses ?? [], settlements ?? []),
@@ -366,7 +381,65 @@ export function GroupDetailPage() {
         ) : !expenses || expenses.length === 0 ? (
           <p className="text-sm text-[var(--color-ink-muted)]">No expenses yet.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
+                  Spending
+                </p>
+                <div className="flex gap-1 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] p-0.5">
+                  {CHART_RANGES.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setChartRange(r.id)}
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                        chartRange === r.id ? 'bg-[var(--color-ledger)] text-white' : 'text-[var(--color-ink-muted)]'
+                      }`}
+                    >
+                      {r.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {chartBreakdown.byCategory.length > 0 ? (
+                <div className="mt-2 flex items-center gap-4 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)]">
+                  <DonutChart
+                    segments={chartBreakdown.byCategory.map((c) => ({
+                      value: c.total,
+                      color: categoryById(c.category).color,
+                    }))}
+                    centerValue={formatCurrency(chartBreakdown.total)}
+                    centerLabel="Group spending"
+                  />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    {chartBreakdown.byCategory.map((c) => {
+                      const cat = categoryById(c.category)
+                      return (
+                        <div key={c.category} className="flex items-center justify-between gap-2 text-xs">
+                          <span className="flex min-w-0 items-center gap-1.5 truncate text-[var(--color-ink)]">
+                            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: cat.color }} />
+                            <span className="truncate">
+                              {cat.emoji} {cat.label}
+                            </span>
+                          </span>
+                          <span className="font-mono-nums shrink-0 text-[var(--color-ink-muted)]">
+                            {formatCurrency(c.total)}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-2 rounded-2xl border border-dashed border-[var(--color-line)] p-4 text-center text-sm text-[var(--color-ink-muted)]">
+                  No spending in this period.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
             {expenses.slice(0, visibleExpenseCount).map((e) => {
               const delta = myExpenseDelta(e, userId)
               return (
@@ -418,6 +491,7 @@ export function GroupDetailPage() {
                 Show more
               </button>
             )}
+            </div>
           </div>
         ))}
 

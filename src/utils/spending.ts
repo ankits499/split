@@ -65,6 +65,35 @@ function weeklyBuckets(expenses: Expense[], start: Date, today: Date): SpendingB
   return buckets.map((b) => b.bucket)
 }
 
+/** Same category-bucketing as `computeSpendingBreakdown`, but over the whole
+ *  group's spend (full expense amount, not just the caller's share) — used
+ *  for a single group's own category chart rather than the cross-group,
+ *  per-user Profile chart. */
+export function computeGroupCategoryBreakdown(
+  expenses: Expense[],
+  range: SpendingRange
+): { total: number; byCategory: CategorySlice[] } {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const start = startOfRange(range, today)
+  const startIso = toIsoDate(start)
+  const todayIso = toIsoDate(today)
+
+  const inRange = expenses.filter((e) => e.expense_date >= startIso && e.expense_date <= todayIso)
+
+  let total = 0
+  const categoryTotals = new Map<string, number>()
+  for (const e of inRange) {
+    total += e.amount
+    categoryTotals.set(e.category, (categoryTotals.get(e.category) ?? 0) + e.amount)
+  }
+  const byCategory: CategorySlice[] = [...categoryTotals.entries()]
+    .map(([category, t]) => ({ category, total: Math.round(t * 100) / 100 }))
+    .sort((a, b) => b.total - a.total)
+
+  return { total: Math.round(total * 100) / 100, byCategory }
+}
+
 /** Filters `expenses` (already fetched over `SPENDING_WINDOW_DAYS`) down to `range` and
  *  computes the bar-chart buckets (total group spend) and per-category totals (the
  *  signed-in user's own share only, matching the balance semantics used elsewhere). */
