@@ -8,6 +8,7 @@ import { useOverallSummary } from '../features/dashboard/hooks'
 import { useTheme } from '../features/theme'
 import { Avatar } from '../components/Avatar'
 import { InstallPrompt } from '../components/InstallPrompt'
+import { OnlineIndicator } from '../components/OnlineIndicator'
 import { ExpenseSheet } from '../components/ExpenseSheet'
 import { formatCurrency, formatShortDate } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
@@ -44,7 +45,10 @@ export function HomePage() {
           <h1 className="text-lg font-medium text-[var(--color-ink)]">
             Hi, {name} <span aria-hidden>👋</span>
           </h1>
-          <p className="text-xs text-[var(--color-ink-muted)]">{greeting()}, here's your overview</p>
+          <div className="mt-1 flex items-center gap-2">
+            <p className="text-xs text-[var(--color-ink-muted)]">{greeting()}, here's your overview</p>
+            <OnlineIndicator />
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button
