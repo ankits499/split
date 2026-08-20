@@ -219,14 +219,17 @@ export function ExpenseSheet({
           className="font-mono-nums mb-3 w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-3 text-center text-2xl font-semibold text-[var(--color-ink)] outline-none focus:border-[var(--color-ledger)]"
         />
 
-        <input
-          type="date"
-          required
-          value={date}
-          max={new Date().toISOString().slice(0, 10)}
-          onChange={(e) => setDate(e.target.value)}
-          className="mb-4 block w-full max-w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-3 text-[var(--color-ink)] outline-none focus:border-[var(--color-ledger)]"
-        />
+        <div className="mb-4 w-full overflow-hidden rounded-xl border border-[var(--color-line)] focus-within:border-[var(--color-ledger)]">
+          <input
+            type="date"
+            required
+            value={date}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => setDate(e.target.value)}
+            style={{ WebkitAppearance: 'none', appearance: 'none' }}
+            className="block w-full bg-transparent px-4 py-3 text-[var(--color-ink)] outline-none"
+          />
+        </div>
 
         <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
           Category

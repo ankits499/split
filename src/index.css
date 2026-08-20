@@ -68,13 +68,20 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 20px -12px rgba(0, 0, 0, 0.4);
 }
 
+/* iOS lets the whole page rubber-band/bounce on overscroll, which drags
+   position:fixed elements (the bottom nav) along with it — pinning html/body
+   in place and making #root the only scrolling region stops that; fixed
+   children of #root still anchor to the true viewport, not #root's box,
+   since nothing here creates a new containing block for them. */
 html,
-body,
-#root {
+body {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
+  position: fixed;
+  inset: 0;
   margin: 0;
   background: var(--color-bg);
   color: var(--color-ink);
@@ -92,13 +99,15 @@ textarea {
 }
 
 #root {
+  position: absolute;
+  inset: 0;
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100svh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   background: var(--color-bg);
-  position: relative;
 }
 
 @media (min-width: 900px) {
