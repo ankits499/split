@@ -2,6 +2,17 @@ export function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] ?? name
 }
 
+/** Formats a Date as "YYYY-MM-DD" using its local calendar date — unlike
+ *  `toISOString().slice(0, 10)`, this doesn't shift the date when the local
+ *  timezone is ahead of UTC (e.g. IST), which would otherwise turn "today"
+ *  into "yesterday" for parts of the day. */
+export function toIsoDate(d: Date): string {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export function formatCurrency(amount: number, currency = 'INR'): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',

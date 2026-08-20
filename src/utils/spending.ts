@@ -1,4 +1,5 @@
 import type { Expense } from '../features/expenses/hooks'
+import { toIsoDate } from './money'
 
 export type SpendingRange = '1w' | 'mtd' | '3m'
 
@@ -18,10 +19,6 @@ export interface SpendingBreakdown {
   total: number
   byCategory: CategorySlice[]
   buckets: SpendingBucket[]
-}
-
-function toIsoDate(d: Date): string {
-  return d.toISOString().slice(0, 10)
 }
 
 function startOfRange(range: SpendingRange, today: Date): Date {

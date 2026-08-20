@@ -4,7 +4,7 @@ import type { Expense, Split } from '../features/expenses/hooks'
 import type { GroupMember } from '../features/groups/hooks'
 import { useGroups } from '../features/groups/hooks'
 import { useAddExpense, useUpdateExpense } from '../features/expenses/hooks'
-import { splitEqually, splitByPercentage, formatCurrency } from '../utils/money'
+import { splitEqually, splitByPercentage, formatCurrency, toIsoDate } from '../utils/money'
 import { POPULAR_CATEGORIES, MORE_CATEGORIES } from '../utils/categories'
 
 type SplitMode = 'equal' | 'exact' | 'percent'
@@ -38,7 +38,7 @@ export function ExpenseSheet({
   const updateExpense = useUpdateExpense(groupId)
   const [description, setDescription] = useState(expense?.description ?? '')
   const [amount, setAmount] = useState(expense ? String(expense.amount) : '')
-  const [date, setDate] = useState(expense?.expense_date ?? new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(expense?.expense_date ?? toIsoDate(new Date()))
   const [category, setCategory] = useState(expense?.category ?? 'other')
   const [showMoreCategories, setShowMoreCategories] = useState(false)
   const [paidBy, setPaidBy] = useState(expense?.paid_by ?? currentUserId)
@@ -224,7 +224,7 @@ export function ExpenseSheet({
             type="date"
             required
             value={date}
-            max={new Date().toISOString().slice(0, 10)}
+            max={toIsoDate(new Date())}
             onChange={(e) => setDate(e.target.value)}
             style={{ WebkitAppearance: 'none', appearance: 'none' }}
             className="block w-full bg-transparent px-4 py-3 text-[var(--color-ink)] outline-none"

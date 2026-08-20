@@ -6,6 +6,7 @@ import { useGroups } from '../groups/hooks'
 import type { Expense } from '../expenses/hooks'
 import type { Settlement } from '../settlements/hooks'
 import { SPENDING_WINDOW_DAYS } from '../../utils/spending'
+import { toIsoDate } from '../../utils/money'
 
 // How far back Home's "recent" widgets (recent expenses list) look. Balances
 // below are NOT limited by this — those come from a SQL aggregate over full
@@ -43,7 +44,7 @@ export function useOverallSummary() {
 
       const cutoff = new Date()
       cutoff.setDate(cutoff.getDate() - RECENT_WINDOW_DAYS)
-      const cutoffDate = cutoff.toISOString().slice(0, 10)
+      const cutoffDate = toIsoDate(cutoff)
 
       const [{ data: balanceRows, error: balanceErr }, { data: expenseRows, error: expenseErr }] =
         await Promise.all([
@@ -113,7 +114,7 @@ export function useSpendingHistory() {
 
       const cutoff = new Date()
       cutoff.setDate(cutoff.getDate() - SPENDING_WINDOW_DAYS)
-      const cutoffDate = cutoff.toISOString().slice(0, 10)
+      const cutoffDate = toIsoDate(cutoff)
 
       const { data: expenseRows, error } = await supabase
         .from('expenses')
