@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
-import { LogOut } from 'lucide-react'
+import { Bell, LogOut } from 'lucide-react'
 import { useLocalUser, useRenameLocalUser } from '../features/localUser'
 import { useAuth } from '../features/auth/AuthProvider'
+import { usePushSubscription } from '../features/push/register'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { useTheme } from '../features/theme'
 
 export function ProfilePage() {
-  const { name: currentName } = useLocalUser()
+  const { id: userId, name: currentName } = useLocalUser()
   const rename = useRenameLocalUser()
   const { session, signOut } = useAuth()
   const { theme, toggle: toggleTheme } = useTheme()
+  const push = usePushSubscription(userId)
   const [name, setName] = useState(currentName)
   const [saved, setSaved] = useState(false)
   const [confirmSignOut, setConfirmSignOut] = useState(false)
@@ -62,6 +64,41 @@ export function ProfilePage() {
         <span className="text-sm text-[var(--color-ink)]">{theme === 'dark' ? 'Dark mode' : 'Light mode'}</span>
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </div>
+
+      <p className="mt-8 mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
+        Notifications
+      </p>
+      {push.permission === 'unsupported' ? (
+        <p className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-ink-muted)]">
+          Not supported on this device or browser.
+        </p>
+      ) : push.permission === 'denied' ? (
+        <p className="rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3 text-sm text-[var(--color-ink-muted)]">
+          Blocked — enable notifications for Split in your device settings to turn this on.
+        </p>
+      ) : (
+        <div className="flex items-center justify-between rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3">
+          <span className="flex items-center gap-2 text-sm text-[var(--color-ink)]">
+            <Bell size={16} strokeWidth={2.25} />
+            Group activity alerts
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={push.subscribed}
+            aria-label={push.subscribed ? 'Disable notifications' : 'Enable notifications'}
+            disabled={push.checking || push.busy}
+            onClick={() => (push.subscribed ? push.unsubscribe() : push.subscribe())}
+            className="relative flex h-8 w-14 shrink-0 items-center rounded-full border border-[var(--color-line)] bg-[var(--color-bg)] transition-colors disabled:opacity-50"
+          >
+            <span
+              className="absolute flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-ledger)] text-white shadow-sm transition-transform duration-200 ease-out"
+              style={{ transform: push.subscribed ? 'translateX(29px)' : 'translateX(3px)' }}
+            />
+          </button>
+        </div>
+      )}
+      {push.error && <p className="mt-1.5 text-xs text-[var(--color-receipt)]">{push.error}</p>}
 
       <p className="mt-8 mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
         Account

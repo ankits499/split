@@ -163,7 +163,7 @@ export function useActivityFeed() {
             .limit(limit),
           supabase
             .from('settlements')
-            .select('id, group_id, from_user, to_user, amount, created_at')
+            .select('id, group_id, from_user, to_user, amount, created_by, created_at')
             .in('group_id', groupIds)
             .order('created_at', { ascending: false })
             .limit(limit),

@@ -50,6 +50,7 @@ create table settlements (
   from_user uuid not null references profiles (id),
   to_user uuid not null references profiles (id),
   amount numeric(12, 2) not null check (amount > 0),
+  created_by uuid not null references profiles (id),
   created_at timestamptz not null default now()
 );
 
@@ -201,3 +202,55 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function handle_new_user();
+
+-- ---------- Push notifications ----------
+create table push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references profiles (id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table push_subscriptions enable row level security;
+
+create policy "push_subscriptions manage own" on push_subscriptions
+  for all to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+-- The notify-group edge function reads across users with the service role,
+-- which bypasses RLS entirely, so no separate policy is needed for it.
+
+create extension if not exists pg_net;
+
+-- Fires the notify-group Edge Function whenever a new expense or settlement
+-- is inserted, so group members get a push notification. Runs async via
+-- pg_net (fire-and-forget: never blocks or fails the insert itself). The
+-- URL and shared secret below match this project's deployed function —
+-- update them if you redeploy notify-group under a different secret.
+create or replace function notify_group_on_insert()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  perform net.http_post(
+    url := 'https://mveecfqanpurlacwvobw.supabase.co/functions/v1/notify-group',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-webhook-secret', '<WEBHOOK_SECRET — generated locally, live only in the deployed function/trigger, never committed>'
+    ),
+    body := jsonb_build_object('table', TG_TABLE_NAME, 'record', to_jsonb(NEW))
+  );
+  return NEW;
+end;
+$$;
+
+create trigger expenses_notify_group
+  after insert on expenses
+  for each row execute function notify_group_on_insert();
+
+create trigger settlements_notify_group
+  after insert on settlements
+  for each row execute function notify_group_on_insert();

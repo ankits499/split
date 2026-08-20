@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../auth/AuthProvider'
 
 export interface Settlement {
   id: string
@@ -7,6 +8,7 @@ export interface Settlement {
   from_user: string
   to_user: string
   amount: number
+  created_by: string
   created_at: string
 }
 
@@ -16,7 +18,7 @@ export function useSettlements(groupId: string | undefined) {
     queryFn: async (): Promise<Settlement[]> => {
       const { data, error } = await supabase
         .from('settlements')
-        .select('id, group_id, from_user, to_user, amount, created_at')
+        .select('id, group_id, from_user, to_user, amount, created_by, created_at')
         .eq('group_id', groupId!)
         .order('created_at', { ascending: false })
       if (error) throw error
@@ -27,6 +29,7 @@ export function useSettlements(groupId: string | undefined) {
 }
 
 export function useAddSettlement(groupId: string) {
+  const { session } = useAuth()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (input: { fromUser: string; toUser: string; amount: number }) => {
@@ -35,6 +38,7 @@ export function useAddSettlement(groupId: string) {
         from_user: input.fromUser,
         to_user: input.toUser,
         amount: input.amount,
+        created_by: session!.user.id,
       })
       if (error) throw error
     },
