@@ -143,7 +143,7 @@ export function HomePage() {
                     See all
                   </Link>
                 </div>
-                <div className="space-y-2">
+                <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
                   {recentExpenses.map((e) => {
                     const delta = myExpenseDelta(e, userId)
                     const groupName = groupNameById.get(e.group_id) ?? 'Group'
@@ -151,7 +151,7 @@ export function HomePage() {
                       <Link
                         key={e.id}
                         to={`/groups/${e.group_id}`}
-                        className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
+                        className="flex items-center gap-3 p-3"
                       >
                         <CategoryIcon category={e.category} size="sm" />
                         <div className="min-w-0 flex-1">

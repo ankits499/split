@@ -53,13 +53,13 @@ export function ActivityPage() {
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
                 {label}
               </p>
-              <div className="space-y-2">
+              <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
                 {entries.map((entry) =>
                   entry.kind === 'expense' && entry.expense ? (
                     <Link
                       key={`e-${entry.id}`}
                       to={`/groups/${entry.groupId}`}
-                      className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
+                      className="flex items-center gap-3 p-3"
                     >
                       <CategoryIcon category={entry.expense.category} size="md" />
                       <div className="min-w-0 flex-1">
@@ -89,7 +89,7 @@ export function ActivityPage() {
                     <Link
                       key={`s-${entry.id}`}
                       to={`/groups/${entry.groupId}`}
-                      className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
+                      className="flex items-center gap-3 p-3"
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
                         <ArrowLeftRight size={16} strokeWidth={2.25} />

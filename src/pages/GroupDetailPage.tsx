@@ -435,7 +435,8 @@ export function GroupDetailPage() {
         ) : !expenses || expenses.length === 0 ? (
           <p className="text-sm text-[var(--color-ink-muted)]">No expenses yet.</p>
         ) : (
-          <div className="space-y-2">
+          <div>
+            <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
             {expenses.slice(0, visibleExpenseCount).map((e) => {
               const delta = myExpenseDelta(e, userId)
               return (
@@ -447,7 +448,7 @@ export function GroupDetailPage() {
                   onKeyDown={(ev) => {
                     if (ev.key === 'Enter' || ev.key === ' ') setEditTarget(e)
                   }}
-                  className="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 text-left shadow-[var(--shadow-card)] active:opacity-80"
+                  className="flex w-full cursor-pointer items-center gap-3 p-3 text-left active:opacity-80"
                 >
                   <CategoryIcon category={e.category} size="md" />
                   <div className="min-w-0 flex-1">
@@ -479,10 +480,11 @@ export function GroupDetailPage() {
                 </div>
               )
             })}
+            </div>
             {expenses.length > visibleExpenseCount && (
               <button
                 onClick={() => setVisibleExpenseCount((c) => c + PAGE_SIZE)}
-                className="w-full rounded-xl border border-[var(--color-line)] py-2.5 text-sm font-medium text-[var(--color-ink)]"
+                className="mt-2 w-full rounded-xl border border-[var(--color-line)] py-2.5 text-sm font-medium text-[var(--color-ink)]"
               >
                 Show more
               </button>
@@ -494,13 +496,13 @@ export function GroupDetailPage() {
         (transfers.length === 0 ? (
           <p className="text-sm text-[var(--color-ink-muted)]">Everyone's settled up.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
             {transfers.map((t, i) => {
               const involvesMe = t.from === userId || t.to === userId
               return (
                 <div
                   key={i}
-                  className="flex items-center justify-between rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
+                  className="flex items-center justify-between p-3"
                 >
                   <span className="flex items-center gap-1.5 text-sm text-[var(--color-ink)]">
                     <Avatar name={nameFor(t.from)} size="sm" />
@@ -532,11 +534,12 @@ export function GroupDetailPage() {
         (!settlements || settlements.length === 0 ? (
           <p className="text-sm text-[var(--color-ink-muted)]">No settlements recorded yet.</p>
         ) : (
-          <div className="space-y-2">
+          <div>
+            <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
             {settlements.slice(0, visibleSettlementCount).map((s) => (
               <div
                 key={s.id}
-                className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
+                className="flex items-center gap-3 p-3"
               >
                 <Avatar name={nameFor(s.from_user)} size="md" />
                 <div className="min-w-0 flex-1">
@@ -552,10 +555,11 @@ export function GroupDetailPage() {
                 </span>
               </div>
             ))}
+            </div>
             {settlements.length > visibleSettlementCount && (
               <button
                 onClick={() => setVisibleSettlementCount((c) => c + PAGE_SIZE)}
-                className="w-full rounded-xl border border-[var(--color-line)] py-2.5 text-sm font-medium text-[var(--color-ink)]"
+                className="mt-2 w-full rounded-xl border border-[var(--color-line)] py-2.5 text-sm font-medium text-[var(--color-ink)]"
               >
                 Show more
               </button>
@@ -565,10 +569,10 @@ export function GroupDetailPage() {
 
       {tab === 'history' &&
         (historyCycle !== null ? (
-          <div className="space-y-2">
+          <div>
             <button
               onClick={() => setHistoryCycle(null)}
-              className="mb-1 flex items-center gap-1 text-xs font-medium text-[var(--color-ink-muted)]"
+              className="mb-2 flex items-center gap-1 text-xs font-medium text-[var(--color-ink-muted)]"
             >
               <ArrowLeft size={13} strokeWidth={2.25} /> Back to History
             </button>
@@ -577,20 +581,22 @@ export function GroupDetailPage() {
             ) : !cycleExpenses || cycleExpenses.length === 0 ? (
               <p className="text-sm text-[var(--color-ink-muted)]">No expenses in this cycle.</p>
             ) : (
-              cycleExpenses.map((e) => (
-                <div
-                  key={e.id}
-                  className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
-                >
-                  <CategoryIcon category={e.category} size="md" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
-                    <p className="font-mono-nums truncate text-xs text-[var(--color-ink-muted)]">
-                      {firstName(nameFor(e.paid_by))} paid {formatCurrency(e.amount)} · {formatShortDate(e.expense_date)}
-                    </p>
+              <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
+                {cycleExpenses.map((e) => (
+                  <div
+                    key={e.id}
+                    className="flex items-center gap-3 p-3"
+                  >
+                    <CategoryIcon category={e.category} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
+                      <p className="font-mono-nums truncate text-xs text-[var(--color-ink-muted)]">
+                        {firstName(nameFor(e.paid_by))} paid {formatCurrency(e.amount)} · {formatShortDate(e.expense_date)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         ) : !cycleSummaries || cycleSummaries.length === 0 ? (
