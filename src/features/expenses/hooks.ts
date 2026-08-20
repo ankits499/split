@@ -29,7 +29,6 @@ export function useExpenses(groupId: string | undefined) {
           'id, group_id, description, amount, paid_by, expense_date, created_at, category, expense_splits(user_id, share)'
         )
         .eq('group_id', groupId!)
-        .order('expense_date', { ascending: false })
         .order('created_at', { ascending: false })
       if (error) throw error
       return data.map((e) => ({
