@@ -52,7 +52,7 @@ export function useOverallSummary() {
           supabase
             .from('expenses')
             .select(
-              'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, expense_splits(user_id, share)'
+              'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, created_by, edited_at, edited_by, expense_splits(user_id, share)'
             )
             .in('group_id', groupIds)
             .gte('expense_date', cutoffDate)
@@ -71,6 +71,9 @@ export function useOverallSummary() {
         created_at: e.created_at,
         category: e.category,
         cycle: e.cycle,
+        created_by: e.created_by,
+        edited_at: e.edited_at,
+        edited_by: e.edited_by,
         splits: e.expense_splits.map((s: { user_id: string; share: number }) => ({
           user_id: s.user_id,
           share: Number(s.share),
@@ -119,7 +122,7 @@ export function useSpendingHistory() {
       const { data: expenseRows, error } = await supabase
         .from('expenses')
         .select(
-          'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, expense_splits(user_id, share)'
+          'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, created_by, edited_at, edited_by, expense_splits(user_id, share)'
         )
         .in('group_id', groupIds)
         .gte('expense_date', cutoffDate)
@@ -136,6 +139,9 @@ export function useSpendingHistory() {
         created_at: e.created_at,
         category: e.category,
         cycle: e.cycle,
+        created_by: e.created_by,
+        edited_at: e.edited_at,
+        edited_by: e.edited_by,
         splits: e.expense_splits.map((s: { user_id: string; share: number }) => ({
           user_id: s.user_id,
           share: Number(s.share),
@@ -154,6 +160,8 @@ export interface ActivityEntry {
   createdAt: string
   expense?: Expense
   settlement?: Settlement
+  addedByName?: string
+  editedByName?: string
 }
 
 const ACTIVITY_PAGE_SIZE = 25
@@ -176,7 +184,7 @@ export function useActivityFeed() {
           supabase
             .from('expenses')
             .select(
-              'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, expense_splits(user_id, share)'
+              'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, created_by, edited_at, edited_by, expense_splits(user_id, share)'
             )
             .in('group_id', groupIds)
             .order('created_at', { ascending: false })
@@ -192,6 +200,9 @@ export function useActivityFeed() {
       if (settlementErr) throw settlementErr
 
       const groupNameById = new Map((groups ?? []).map((g) => [g.id, g.name]))
+      const memberNameById = new Map(
+        (groups ?? []).flatMap((g) => g.members.map((m) => [m.user_id, m.name] as const))
+      )
 
       const expenses: Expense[] = expenseRows.map((e) => ({
         id: e.id,
@@ -203,6 +214,9 @@ export function useActivityFeed() {
         created_at: e.created_at,
         category: e.category,
         cycle: e.cycle,
+        created_by: e.created_by,
+        edited_at: e.edited_at,
+        edited_by: e.edited_by,
         splits: e.expense_splits.map((s: { user_id: string; share: number }) => ({
           user_id: s.user_id,
           share: Number(s.share),
@@ -218,6 +232,10 @@ export function useActivityFeed() {
           groupName: groupNameById.get(e.group_id) ?? 'Group',
           createdAt: e.created_at,
           expense: e,
+          addedByName: memberNameById.get(e.created_by) ?? 'Someone',
+          editedByName: e.edited_at
+            ? (e.edited_by && memberNameById.get(e.edited_by)) || 'Someone'
+            : undefined,
         })),
         ...settlements.map((s) => ({
           kind: 'settlement' as const,

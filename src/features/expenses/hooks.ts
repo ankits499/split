@@ -17,6 +17,9 @@ export interface Expense {
   created_at: string
   category: string
   cycle: number
+  created_by: string
+  edited_at: string | null
+  edited_by: string | null
   splits: Split[]
 }
 
@@ -30,6 +33,9 @@ export function mapExpenseRow(e: {
   created_at: string
   category: string
   cycle: number
+  created_by: string
+  edited_at: string | null
+  edited_by: string | null
   expense_splits: { user_id: string; share: number }[]
 }): Expense {
   return {
@@ -42,12 +48,15 @@ export function mapExpenseRow(e: {
     created_at: e.created_at,
     category: e.category,
     cycle: e.cycle,
+    created_by: e.created_by,
+    edited_at: e.edited_at,
+    edited_by: e.edited_by,
     splits: e.expense_splits.map((s) => ({ user_id: s.user_id, share: Number(s.share) })),
   }
 }
 
 export const EXPENSE_COLUMNS =
-  'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, expense_splits(user_id, share)'
+  'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, created_by, edited_at, edited_by, expense_splits(user_id, share)'
 
 export function useExpenses(groupId: string | undefined, cycle: number | undefined) {
   return useQuery({
@@ -170,6 +179,7 @@ export function useAddExpense(groupId: string) {
 }
 
 export function useUpdateExpense(groupId: string) {
+  const { session } = useAuth()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (input: {
@@ -189,6 +199,8 @@ export function useUpdateExpense(groupId: string) {
           paid_by: input.paidBy,
           expense_date: input.date,
           category: input.category,
+          edited_at: new Date().toISOString(),
+          edited_by: session!.user.id,
         })
         .eq('id', input.id)
       if (error) throw error
@@ -205,6 +217,7 @@ export function useUpdateExpense(groupId: string) {
       queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
       queryClient.invalidateQueries({ queryKey: ['settlements', groupId] })
       queryClient.invalidateQueries({ queryKey: ['overall-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['activity-feed'] })
     },
   })
 }

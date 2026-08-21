@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     return new Response("unauthorized", { status: 401 });
   }
 
-  const { table, record } = await req.json();
+  const { table, event = "insert", record } = await req.json();
 
   let groupId: string;
   let actorId: string;
@@ -55,7 +55,9 @@ Deno.serve(async (req) => {
     groupId = record.group_id;
     actorId = record.created_by;
     title = group?.name ?? "Split";
-    body = `${payer?.name ?? "Someone"} added "${record.description}" — ${formatCurrency(Number(record.amount))}`;
+    body = event === "update"
+      ? `${payer?.name ?? "Someone"} edited "${record.description}"`
+      : `${payer?.name ?? "Someone"} added "${record.description}" — ${formatCurrency(Number(record.amount))}`;
   } else if (table === "settlements") {
     const [{ data: group }, { data: fromUser }, { data: toUser }] = await Promise.all([
       supabase.from("groups").select("name").eq("id", record.group_id).single(),

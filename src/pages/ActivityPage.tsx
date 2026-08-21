@@ -3,7 +3,7 @@ import { ArrowLeftRight, Receipt } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
 import { useActivityFeed, type ActivityEntry } from '../features/dashboard/hooks'
 import { CategoryIcon } from '../components/CategoryIcon'
-import { formatCurrency } from '../utils/money'
+import { formatCurrency, firstName } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
 
 function dateLabel(iso: string): string {
@@ -68,6 +68,11 @@ export function ActivityPage() {
                         </p>
                         <p className="truncate text-xs text-[var(--color-ink-muted)]">
                           {entry.groupName} · {formatCurrency(entry.expense.amount)}
+                          {entry.editedByName
+                            ? ` · Edited by ${firstName(entry.editedByName)}`
+                            : entry.addedByName
+                              ? ` · Added by ${firstName(entry.addedByName)}`
+                              : ''}
                         </p>
                       </div>
                       {(() => {

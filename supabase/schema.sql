@@ -33,7 +33,10 @@ create table expenses (
   expense_date date not null default current_date,
   created_at timestamptz not null default now(),
   -- one of the ids in src/utils/categories.ts (not FK-enforced; app-level enum)
-  category text not null default 'other'
+  category text not null default 'other',
+  -- set by the client on update; null until first edit
+  edited_at timestamptz null,
+  edited_by uuid null references profiles (id)
 );
 
 -- One row per (expense, member) recording that member's owed share.
@@ -241,7 +244,7 @@ begin
       'Content-Type', 'application/json',
       'x-webhook-secret', '<WEBHOOK_SECRET — generated locally, live only in the deployed function/trigger, never committed>'
     ),
-    body := jsonb_build_object('table', TG_TABLE_NAME, 'record', to_jsonb(NEW))
+    body := jsonb_build_object('table', TG_TABLE_NAME, 'event', 'insert', 'record', to_jsonb(NEW))
   );
   return NEW;
 end;
@@ -254,3 +257,36 @@ create trigger expenses_notify_group
 create trigger settlements_notify_group
   after insert on settlements
   for each row execute function notify_group_on_insert();
+
+-- Fires notify-group on a substantive edit to an expense (not on every
+-- column touch — the WHEN clause skips no-op saves and unrelated column
+-- changes like edited_at itself) so group members get an "edited" push.
+create or replace function notify_group_on_expense_update()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  perform net.http_post(
+    url := 'https://mveecfqanpurlacwvobw.supabase.co/functions/v1/notify-group',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-webhook-secret', '<WEBHOOK_SECRET — generated locally, live only in the deployed function/trigger, never committed>'
+    ),
+    body := jsonb_build_object('table', TG_TABLE_NAME, 'event', 'update', 'record', to_jsonb(NEW))
+  );
+  return NEW;
+end;
+$$;
+
+create trigger expenses_notify_group_update
+  after update on expenses
+  for each row
+  when (
+    OLD.description is distinct from NEW.description
+    or OLD.amount is distinct from NEW.amount
+    or OLD.paid_by is distinct from NEW.paid_by
+    or OLD.expense_date is distinct from NEW.expense_date
+    or OLD.category is distinct from NEW.category
+  )
+  execute function notify_group_on_expense_update();

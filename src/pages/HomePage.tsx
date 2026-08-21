@@ -7,12 +7,36 @@ import { useGroups } from '../features/groups/hooks'
 import { useOverallSummary } from '../features/dashboard/hooks'
 import { useTheme } from '../features/theme'
 import { Avatar } from '../components/Avatar'
+import type { GroupSummary } from '../features/groups/hooks'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { InstallPrompt } from '../components/InstallPrompt'
 import { OnlineIndicator } from '../components/OnlineIndicator'
 import { ExpenseSheet } from '../components/ExpenseSheet'
 import { formatCurrency, formatShortDate } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
+
+/** Groups ordered by most recent expense activity (from the already-fetched
+ *  recent-expenses list), with any remaining groups appended in their
+ *  existing order — avoids a dedicated "last activity per group" query. */
+function recentGroups(groups: GroupSummary[], recentExpenses: { group_id: string }[]): GroupSummary[] {
+  const byId = new Map(groups.map((g) => [g.id, g]))
+  const seen = new Set<string>()
+  const ordered: GroupSummary[] = []
+  for (const e of recentExpenses) {
+    const g = byId.get(e.group_id)
+    if (g && !seen.has(g.id)) {
+      seen.add(g.id)
+      ordered.push(g)
+    }
+  }
+  for (const g of groups) {
+    if (!seen.has(g.id)) {
+      seen.add(g.id)
+      ordered.push(g)
+    }
+  }
+  return ordered
+}
 
 function greeting() {
   const hour = new Date().getHours()
@@ -132,6 +156,29 @@ export function HomePage() {
                 Add group
               </Link>
             </div>
+
+            {groups.length > 0 && (
+              <>
+                <p className="mt-6 mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
+                  Recent groups
+                </p>
+                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+                  {recentGroups(groups, recentExpenses).map((g) => (
+                    <Link
+                      key={g.id}
+                      to={`/groups/${g.id}`}
+                      className="flex w-28 shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] py-3 text-center shadow-[var(--shadow-card)]"
+                    >
+                      <Avatar name={g.name} size="md" />
+                      <p className="w-full truncate px-1.5 text-xs font-medium text-[var(--color-ink)]">{g.name}</p>
+                      <p className="text-[11px] text-[var(--color-ink-muted)]">
+                        {g.members.length} {g.members.length === 1 ? 'member' : 'members'}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
 
             {recentExpenses.length > 0 && (
               <>

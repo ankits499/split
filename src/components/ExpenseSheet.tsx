@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, X, Receipt, ChevronDown } from 'lucide-react'
 import type { Expense, Split } from '../features/expenses/hooks'
 import type { GroupMember } from '../features/groups/hooks'
@@ -11,6 +11,19 @@ type SplitMode = 'equal' | 'exact' | 'percent'
 
 function splitsToRecord(splits: Split[]): Record<string, string> {
   return Object.fromEntries(splits.map((s) => [s.user_id, String(s.share)]))
+}
+
+function splitsToPercentRecord(splits: Split[], total: number): Record<string, string> {
+  if (total <= 0) return {}
+  return Object.fromEntries(
+    splits.map((s) => [s.user_id, String(Math.round((s.share / total) * 10000) / 100)])
+  )
+}
+
+function equalPercentRecord(userIds: string[]): Record<string, string> {
+  if (userIds.length === 0) return {}
+  const each = Math.round((100 / userIds.length) * 100) / 100
+  return Object.fromEntries(userIds.map((id) => [id, String(each)]))
 }
 
 export function ExpenseSheet({
@@ -41,12 +54,15 @@ export function ExpenseSheet({
   const [date, setDate] = useState(expense?.expense_date ?? toIsoDate(new Date()))
   const [category, setCategory] = useState(expense?.category ?? 'other')
   const [paidBy, setPaidBy] = useState(expense?.paid_by ?? currentUserId)
-  const [mode, setMode] = useState<SplitMode>(isEditing ? 'exact' : 'equal')
+  const [mode, setMode] = useState<SplitMode>('equal')
   const [included, setIncluded] = useState<Set<string>>(
     new Set(expense ? expense.splits.map((s) => s.user_id) : members.map((m) => m.user_id))
   )
-  const [customValues, setCustomValues] = useState<Record<string, string>>(
+  const [exactValues, setExactValues] = useState<Record<string, string>>(
     expense ? splitsToRecord(expense.splits) : {}
+  )
+  const [percentValues, setPercentValues] = useState<Record<string, string>>(
+    expense ? splitsToPercentRecord(expense.splits, expense.amount) : {}
   )
   const [error, setError] = useState<string | null>(null)
 
@@ -54,7 +70,8 @@ export function ExpenseSheet({
     if (needsGroupPicker) {
       setIncluded(new Set(members.map((m) => m.user_id)))
       setPaidBy(currentUserId)
-      setCustomValues({})
+      setExactValues({})
+      setPercentValues({})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGroupId])
@@ -68,6 +85,35 @@ export function ExpenseSheet({
 
   const total = parseFloat(amount) || 0
   const includedMembers = members.filter((m) => included.has(m.user_id))
+  const includedIds = includedMembers.map((m) => m.user_id).join(',')
+
+  // Exact amounts default to (and reset to, whenever the total or the
+  // included members change) an equal split — matches the "default split is
+  // always equal" behavior and keeps the Exact tab in sync with the amount
+  // instead of showing stale numbers from before the edit.
+  const skipExactReset = useRef(true)
+  useEffect(() => {
+    if (skipExactReset.current) {
+      skipExactReset.current = false
+      return
+    }
+    if (includedMembers.length === 0) return
+    const parts = splitEqually(total, includedMembers.length)
+    setExactValues(Object.fromEntries(includedMembers.map((m, i) => [m.user_id, String(parts[i])])))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total, includedIds])
+
+  // Percentages are independent of the total, but still default to (and
+  // reset to) an equal split whenever who's included changes.
+  const skipPercentReset = useRef(true)
+  useEffect(() => {
+    if (skipPercentReset.current) {
+      skipPercentReset.current = false
+      return
+    }
+    setPercentValues(equalPercentRecord(includedMembers.map((m) => m.user_id)))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [includedIds])
 
   const shares = useMemo(() => {
     if (includedMembers.length === 0 || total <= 0) return new Map<string, number>()
@@ -76,18 +122,18 @@ export function ExpenseSheet({
       return new Map(includedMembers.map((m, i) => [m.user_id, parts[i]]))
     }
     if (mode === 'percent') {
-      const percentages = includedMembers.map((m) => parseFloat(customValues[m.user_id]) || 0)
+      const percentages = includedMembers.map((m) => parseFloat(percentValues[m.user_id]) || 0)
       const parts = splitByPercentage(total, percentages)
       return new Map(includedMembers.map((m, i) => [m.user_id, parts[i]]))
     }
-    return new Map(includedMembers.map((m) => [m.user_id, parseFloat(customValues[m.user_id]) || 0]))
-  }, [mode, includedMembers, total, customValues])
+    return new Map(includedMembers.map((m) => [m.user_id, parseFloat(exactValues[m.user_id]) || 0]))
+  }, [mode, includedMembers, total, exactValues, percentValues])
 
   const shareSum = [...shares.values()].reduce((a, b) => a + b, 0)
   const exactMismatch = mode === 'exact' && Math.abs(shareSum - total) > 0.01
   const percentSum =
     mode === 'percent'
-      ? includedMembers.reduce((sum, m) => sum + (parseFloat(customValues[m.user_id]) || 0), 0)
+      ? includedMembers.reduce((sum, m) => sum + (parseFloat(percentValues[m.user_id]) || 0), 0)
       : 0
   const percentMismatch = mode === 'percent' && Math.abs(percentSum - 100) > 0.5
 
@@ -311,15 +357,26 @@ export function ExpenseSheet({
                   <span className="font-mono-nums text-sm text-[var(--color-ink-muted)]">
                     {isIncluded ? formatCurrency(shares.get(m.user_id) ?? 0) : '—'}
                   </span>
+                ) : mode === 'percent' ? (
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    disabled={!isIncluded}
+                    placeholder="%"
+                    value={percentValues[m.user_id] ?? ''}
+                    onChange={(e) => setPercentValues((prev) => ({ ...prev, [m.user_id]: e.target.value }))}
+                    className="font-mono-nums w-20 rounded-lg border border-[var(--color-line)] bg-transparent px-2 py-1 text-right text-sm text-[var(--color-ink)] outline-none disabled:opacity-40"
+                  />
                 ) : (
                   <input
                     type="number"
                     inputMode="decimal"
                     step="0.01"
                     disabled={!isIncluded}
-                    placeholder={mode === 'percent' ? '%' : '₹'}
-                    value={customValues[m.user_id] ?? ''}
-                    onChange={(e) => setCustomValues((prev) => ({ ...prev, [m.user_id]: e.target.value }))}
+                    placeholder="₹"
+                    value={exactValues[m.user_id] ?? ''}
+                    onChange={(e) => setExactValues((prev) => ({ ...prev, [m.user_id]: e.target.value }))}
                     className="font-mono-nums w-20 rounded-lg border border-[var(--color-line)] bg-transparent px-2 py-1 text-right text-sm text-[var(--color-ink)] outline-none disabled:opacity-40"
                   />
                 )}

@@ -455,6 +455,7 @@ export function GroupDetailPage() {
                     <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
                     <p className="font-mono-nums truncate text-xs text-[var(--color-ink-muted)]">
                       {firstName(nameFor(e.paid_by))} paid {formatCurrency(e.amount)} · {formatShortDate(e.expense_date)}
+                      {e.edited_at && ' · Edited'}
                     </p>
                   </div>
                   {Math.abs(delta) > 0.01 && (
