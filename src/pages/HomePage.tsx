@@ -12,7 +12,7 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { InstallPrompt } from '../components/InstallPrompt'
 import { OnlineIndicator } from '../components/OnlineIndicator'
 import { ExpenseSheet } from '../components/ExpenseSheet'
-import { formatCurrency, formatShortDate } from '../utils/money'
+import { formatCurrency, firstName } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
 
 /** Groups ordered by most recent expense activity (from the already-fetched
@@ -62,6 +62,7 @@ export function HomePage() {
 
   const recentExpenses = summary?.recentExpenses ?? []
   const groupNameById = new Map((groups ?? []).map((g) => [g.id, g.name]))
+  const memberNameById = new Map((groups ?? []).flatMap((g) => g.members.map((m) => [m.user_id, m.name] as const)))
 
   return (
     <div className="flex flex-col overflow-hidden">
@@ -194,17 +195,26 @@ export function HomePage() {
                   {recentExpenses.map((e) => {
                     const delta = myExpenseDelta(e, userId)
                     const groupName = groupNameById.get(e.group_id) ?? 'Group'
+                    const addedByName = memberNameById.get(e.created_by)
+                    const editedByName = e.edited_at
+                      ? (e.edited_by && memberNameById.get(e.edited_by)) || 'Someone'
+                      : undefined
                     return (
                       <Link
                         key={e.id}
                         to={`/groups/${e.group_id}`}
                         className="flex items-center gap-3 p-3"
                       >
-                        <CategoryIcon category={e.category} size="sm" />
+                        <CategoryIcon category={e.category} size="md" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
                           <p className="truncate text-xs text-[var(--color-ink-muted)]">
-                            {groupName} · {formatShortDate(e.expense_date)}
+                            {groupName} · {formatCurrency(e.amount)}
+                            {editedByName
+                              ? ` · Edited by ${firstName(editedByName)}`
+                              : addedByName
+                                ? ` · Added by ${firstName(addedByName)}`
+                                : ''}
                           </p>
                         </div>
                         {Math.abs(delta) > 0.01 && (
