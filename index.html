@@ -10,7 +10,12 @@
     />
     <meta name="theme-color" content="#EFEEE7" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- "black-translucent" lets the app's own background show through the
+         status bar instead of iOS drawing a fixed opaque bar, so it tracks
+         the light/dark theme toggle (src/features/theme.tsx) like the rest
+         of the app. #root reserves env(safe-area-inset-top) so content
+         doesn't sit under the notch/clock. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Split" />
     <meta name="description" content="Simple expense sharing with friends" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -107,6 +107,9 @@ textarea {
   display: flex;
   flex-direction: column;
   background: var(--color-bg);
+  /* Status bar is translucent (index.html) so this background shows through
+     it; reserve the inset so page content isn't drawn under the notch/clock. */
+  padding-top: env(safe-area-inset-top);
 }
 
 /* Each page owns its own scroll region (its header stays fixed while its
