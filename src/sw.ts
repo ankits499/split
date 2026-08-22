@@ -44,13 +44,22 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   const url = (event.notification.data as { url?: string } | undefined)?.url ?? '/split/'
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientsArr) => {
+    (async () => {
+      const clientsArr = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       const existing = clientsArr.find((c) => 'focus' in c) as WindowClient | undefined
-      if (existing) {
-        existing.navigate(url)
-        return existing.focus()
+      if (!existing) {
+        await self.clients.openWindow(url)
+        return
       }
-      return self.clients.openWindow(url)
-    })
+      await existing.focus()
+      try {
+        // iOS Safari's standalone-PWA WindowClient can throw here — focus()
+        // above already succeeded, so swallow the error instead of letting
+        // it reject the event and leave the app in a broken state.
+        await existing.navigate(url)
+      } catch {
+        /* iOS: navigating an already-focused client isn't supported */
+      }
+    })()
   )
 })

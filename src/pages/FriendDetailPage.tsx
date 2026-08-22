@@ -19,9 +19,14 @@ export function FriendDetailPage() {
     return (
       <div className="flex flex-col overflow-hidden">
         <div className="shrink-0 flex items-center gap-3 px-4 pt-6 pb-4">
-          <Link to="/groups" aria-label="Back to friends" className="text-[var(--color-ink-muted)]">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            aria-label="Back"
+            className="text-[var(--color-ink-muted)]"
+          >
             <ArrowLeft size={20} strokeWidth={2.25} />
-          </Link>
+          </button>
         </div>
         <p className="px-4 text-center text-sm text-[var(--color-ink-muted)]">
           {isLoading ? 'Loading…' : "You're all settled up with this person."}

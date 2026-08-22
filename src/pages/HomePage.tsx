@@ -47,12 +47,9 @@ function greeting() {
 export function HomePage() {
   const { id: userId, name } = useLocalUser()
   const { data: groups } = useGroups()
-  const { data: summary, isLoading } = useOverallSummary()
+  const { data: summary } = useOverallSummary()
   const { data: friends } = useFriendsSummary()
   const { theme, toggle: toggleTheme } = useTheme()
-
-  const totalBalance = summary?.totalBalance ?? 0
-  const settled = Math.abs(totalBalance) < 0.005
 
   const recentExpenses = summary?.recentExpenses ?? []
   const groupNameById = new Map((groups ?? []).map((g) => [g.id, g.name]))
@@ -108,22 +105,6 @@ export function HomePage() {
           </div>
         ) : (
           <>
-            <p className="font-mono-nums text-sm font-semibold">
-              {isLoading ? (
-                <span className="text-[var(--color-ink-muted)]">—</span>
-              ) : settled ? (
-                <span className="text-[var(--color-ink-muted)]">You're all settled up</span>
-              ) : totalBalance > 0 ? (
-                <span className="text-[var(--color-ledger)]">
-                  + You are owed {formatCurrency(totalBalance)}
-                </span>
-              ) : (
-                <span className="text-[var(--color-receipt)]">
-                  − You owe {formatCurrency(Math.abs(totalBalance))}
-                </span>
-              )}
-            </p>
-
             {friends && friends.length > 0 && (
               <>
                 <p className="mt-5 mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
