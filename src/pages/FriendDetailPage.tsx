@@ -40,9 +40,14 @@ export function FriendDetailPage() {
   return (
     <div className="flex flex-col overflow-hidden">
       <div className="shrink-0 flex items-center gap-3 px-4 pt-6 pb-4">
-        <Link to="/groups" aria-label="Back to friends" className="text-[var(--color-ink-muted)]">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label="Back"
+          className="text-[var(--color-ink-muted)]"
+        >
           <ArrowLeft size={20} strokeWidth={2.25} />
-        </Link>
+        </button>
         <Avatar name={friend.friendName} size="lg" />
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-lg font-semibold text-[var(--color-ink)]">{friend.friendName}</h1>
