@@ -1,13 +1,22 @@
 /// <reference lib="webworker" />
 import { clientsClaim } from 'workbox-core'
-import { precacheAndRoute } from 'workbox-precaching'
-import { registerRoute } from 'workbox-routing'
+import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching'
+import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { NetworkFirst } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
 
 declare const self: ServiceWorkerGlobalScope
 
 precacheAndRoute(self.__WB_MANIFEST)
+
+// Deep links (e.g. from a push notification, `/split/groups/<id>`) rely on
+// public/404.html's client-side redirect trick when GitHub Pages serves the
+// request directly. That multi-hop redirect isn't reliable inside a
+// notification-launched standalone window on iOS, so once the service
+// worker is active, intercept every in-scope navigation ourselves and hand
+// back the cached app shell — React Router then resolves the real route
+// client-side, with no dependency on the GitHub Pages fallback.
+registerRoute(new NavigationRoute(createHandlerBoundToURL('index.html')))
 
 registerRoute(
   ({ url }) => url.hostname.endsWith('supabase.co'),
