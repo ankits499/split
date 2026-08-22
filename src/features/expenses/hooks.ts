@@ -67,6 +67,7 @@ export function useExpenses(groupId: string | undefined, cycle: number | undefin
         .select(EXPENSE_COLUMNS)
         .eq('group_id', groupId!)
         .eq('cycle', cycle!)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
       if (error) throw error
       return data.map(mapExpenseRow)
@@ -93,6 +94,7 @@ export function useGroupCycleSummaries(groupId: string | undefined, currentCycle
         .select('amount, expense_date, cycle')
         .eq('group_id', groupId!)
         .lt('cycle', currentCycle!)
+        .is('deleted_at', null)
       if (error) throw error
 
       const byCycle = new Map<number, CycleSummary>()
@@ -130,6 +132,7 @@ export function useCycleExpenses(groupId: string | undefined, cycle: number | un
         .select(EXPENSE_COLUMNS)
         .eq('group_id', groupId!)
         .eq('cycle', cycle!)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
       if (error) throw error
       return data.map(mapExpenseRow)
@@ -226,12 +229,20 @@ export function useDeleteExpense(groupId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (expenseId: string) => {
-      const { error } = await supabase.from('expenses').delete().eq('id', expenseId)
+      // Soft delete: the row (and its expense_splits) stays so it can still
+      // show up in Activity, but every balance/total query filters out rows
+      // with deleted_at set, so it never counts again.
+      const { error } = await supabase
+        .from('expenses')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', expenseId)
       if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
+      queryClient.invalidateQueries({ queryKey: ['settlements', groupId] })
       queryClient.invalidateQueries({ queryKey: ['overall-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['activity-feed'] })
     },
   })
 }

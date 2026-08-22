@@ -40,7 +40,8 @@ export function useFriendsSummary() {
                 .from('expenses')
                 .select(EXPENSE_COLUMNS)
                 .eq('group_id', g.id)
-                .eq('cycle', g.cycle_number),
+                .eq('cycle', g.cycle_number)
+                .is('deleted_at', null),
               supabase
                 .from('settlements')
                 .select('id, group_id, from_user, to_user, amount, created_by, created_at, cycle')

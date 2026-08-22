@@ -63,32 +63,41 @@ export function ActivityPage() {
                     >
                       <CategoryIcon category={entry.expense.category} size="md" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-[var(--color-ink)]">
+                        <p
+                          className={`truncate text-sm font-medium ${
+                            entry.isDeleted
+                              ? 'text-[var(--color-ink-muted)] line-through'
+                              : 'text-[var(--color-ink)]'
+                          }`}
+                        >
                           {entry.expense.description}
                         </p>
                         <p className="truncate text-xs text-[var(--color-ink-muted)]">
                           {entry.groupName} · {formatCurrency(entry.expense.amount)}
-                          {entry.editedByName
-                            ? ` · Edited by ${firstName(entry.editedByName)}`
-                            : entry.addedByName
-                              ? ` · Added by ${firstName(entry.addedByName)}`
-                              : ''}
+                          {entry.isDeleted
+                            ? ' · Deleted'
+                            : entry.editedByName
+                              ? ` · Edited by ${firstName(entry.editedByName)}`
+                              : entry.addedByName
+                                ? ` · Added by ${firstName(entry.addedByName)}`
+                                : ''}
                         </p>
                       </div>
-                      {(() => {
-                        const delta = myExpenseDelta(entry.expense, userId)
-                        if (Math.abs(delta) < 0.01) return null
-                        return (
-                          <span
-                            className={`font-mono-nums shrink-0 text-sm font-semibold ${
-                              delta > 0 ? 'text-[var(--color-ledger)]' : 'text-[var(--color-receipt)]'
-                            }`}
-                          >
-                            {delta > 0 ? '+' : '−'}
-                            {formatCurrency(Math.abs(delta))}
-                          </span>
-                        )
-                      })()}
+                      {!entry.isDeleted &&
+                        (() => {
+                          const delta = myExpenseDelta(entry.expense, userId)
+                          if (Math.abs(delta) < 0.01) return null
+                          return (
+                            <span
+                              className={`font-mono-nums shrink-0 text-sm font-semibold ${
+                                delta > 0 ? 'text-[var(--color-ledger)]' : 'text-[var(--color-receipt)]'
+                              }`}
+                            >
+                              {delta > 0 ? '+' : '−'}
+                              {formatCurrency(Math.abs(delta))}
+                            </span>
+                          )
+                        })()}
                     </Link>
                   ) : entry.settlement ? (
                     <Link

@@ -56,6 +56,7 @@ export function useOverallSummary() {
             )
             .in('group_id', groupIds)
             .gte('expense_date', cutoffDate)
+            .is('deleted_at', null)
             .order('created_at', { ascending: false }),
         ])
       if (balanceErr) throw balanceErr
@@ -126,6 +127,7 @@ export function useSpendingHistory() {
         )
         .in('group_id', groupIds)
         .gte('expense_date', cutoffDate)
+        .is('deleted_at', null)
         .order('expense_date', { ascending: false })
       if (error) throw error
 
@@ -162,6 +164,7 @@ export interface ActivityEntry {
   settlement?: Settlement
   addedByName?: string
   editedByName?: string
+  isDeleted?: boolean
 }
 
 const ACTIVITY_PAGE_SIZE = 25
@@ -184,7 +187,7 @@ export function useActivityFeed() {
           supabase
             .from('expenses')
             .select(
-              'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, created_by, edited_at, edited_by, expense_splits(user_id, share)'
+              'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, created_by, edited_at, edited_by, deleted_at, expense_splits(user_id, share)'
             )
             .in('group_id', groupIds)
             .order('created_at', { ascending: false })
@@ -202,6 +205,12 @@ export function useActivityFeed() {
       const groupNameById = new Map((groups ?? []).map((g) => [g.id, g.name]))
       const memberNameById = new Map(
         (groups ?? []).flatMap((g) => g.members.map((m) => [m.user_id, m.name] as const))
+      )
+
+      const deletedIds = new Set(
+        (expenseRows as { id: string; deleted_at: string | null }[])
+          .filter((e) => e.deleted_at)
+          .map((e) => e.id)
       )
 
       const expenses: Expense[] = expenseRows.map((e) => ({
@@ -236,6 +245,7 @@ export function useActivityFeed() {
           editedByName: e.edited_at
             ? (e.edited_by && memberNameById.get(e.edited_by)) || 'Someone'
             : undefined,
+          isDeleted: deletedIds.has(e.id),
         })),
         ...settlements.map((s) => ({
           kind: 'settlement' as const,
