@@ -110,12 +110,12 @@ export function HomePage() {
                 <p className="mt-5 mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
                   Friends
                 </p>
-                <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
+                <div className="space-y-2">
                   {friends.map((f) => (
                     <Link
                       key={f.friendId}
                       to={`/friends/${f.friendId}`}
-                      className="flex items-center gap-3 p-3"
+                      className="flex items-center gap-3 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-3 shadow-[var(--shadow-card)]"
                     >
                       <Avatar name={f.friendName} size="md" />
                       <p className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--color-ink)]">

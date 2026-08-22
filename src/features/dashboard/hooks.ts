@@ -95,7 +95,7 @@ export function useOverallSummary() {
         owed: Math.round(owed * 100) / 100,
         owe: Math.round(owe * 100) / 100,
         netByGroup,
-        recentExpenses: expenses.slice(0, 3),
+        recentExpenses: expenses.slice(0, 5),
       }
     },
     enabled: !!session?.user && !!groups,
