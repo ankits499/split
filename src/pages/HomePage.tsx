@@ -1,17 +1,16 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeftRight, Plus, Receipt, UsersRound } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Receipt } from 'lucide-react'
 import { Moon, Sun } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
 import { useGroups } from '../features/groups/hooks'
 import { useOverallSummary } from '../features/dashboard/hooks'
+import { useFriendsSummary } from '../features/friends/hooks'
 import { useTheme } from '../features/theme'
 import { Avatar } from '../components/Avatar'
 import type { GroupSummary } from '../features/groups/hooks'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { InstallPrompt } from '../components/InstallPrompt'
 import { OnlineIndicator } from '../components/OnlineIndicator'
-import { ExpenseSheet } from '../components/ExpenseSheet'
 import { formatCurrency, firstName } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
 
@@ -49,16 +48,11 @@ export function HomePage() {
   const { id: userId, name } = useLocalUser()
   const { data: groups } = useGroups()
   const { data: summary, isLoading } = useOverallSummary()
+  const { data: friends } = useFriendsSummary()
   const { theme, toggle: toggleTheme } = useTheme()
-  const navigate = useNavigate()
 
-  const [showAddExpense, setShowAddExpense] = useState(false)
-  const soloGroupId = groups?.length === 1 ? groups[0].id : null
-
-  const goSettleUp = () => {
-    if (soloGroupId) navigate(`/groups/${soloGroupId}`, { state: { tab: 'balances' } })
-    else navigate('/groups')
-  }
+  const totalBalance = summary?.totalBalance ?? 0
+  const settled = Math.abs(totalBalance) < 0.005
 
   const recentExpenses = summary?.recentExpenses ?? []
   const groupNameById = new Map((groups ?? []).map((g) => [g.id, g.name]))
@@ -114,49 +108,51 @@ export function HomePage() {
           </div>
         ) : (
           <>
-            <div className="rounded-2xl bg-[var(--color-ledger)] p-5 text-white shadow-[var(--shadow-card)]">
-              <p className="text-xs font-medium uppercase tracking-wide text-white/70">Total balance</p>
-              <p className="font-mono-nums mt-1 text-3xl font-bold">
-                {isLoading ? '—' : formatCurrency(Math.abs(summary?.totalBalance ?? 0))}
-              </p>
-              <div className="mt-4 flex gap-6 text-sm">
-                <div>
-                  <p className="text-white/70">You are owed</p>
-                  <p className="font-mono-nums font-semibold">{formatCurrency(summary?.owed ?? 0)}</p>
-                </div>
-                <div>
-                  <p className="text-white/70">You owe</p>
-                  <p className="font-mono-nums font-semibold">{formatCurrency(summary?.owe ?? 0)}</p>
-                </div>
-              </div>
-            </div>
-
-            <p className="mt-5 mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
-              Quick actions
+            <p className="font-mono-nums text-sm font-semibold">
+              {isLoading ? (
+                <span className="text-[var(--color-ink-muted)]">—</span>
+              ) : settled ? (
+                <span className="text-[var(--color-ink-muted)]">You're all settled up</span>
+              ) : totalBalance > 0 ? (
+                <span className="text-[var(--color-ledger)]">
+                  + You are owed {formatCurrency(totalBalance)}
+                </span>
+              ) : (
+                <span className="text-[var(--color-receipt)]">
+                  − You owe {formatCurrency(Math.abs(totalBalance))}
+                </span>
+              )}
             </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => setShowAddExpense(true)}
-                className="flex flex-col items-center gap-1.5 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] py-4 text-xs font-medium text-[var(--color-ink)] shadow-[var(--shadow-card)]"
-              >
-                <Plus size={18} strokeWidth={2.25} className="text-[var(--color-ledger)]" />
-                Add expense
-              </button>
-              <button
-                onClick={goSettleUp}
-                className="flex flex-col items-center gap-1.5 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] py-4 text-xs font-medium text-[var(--color-ink)] shadow-[var(--shadow-card)]"
-              >
-                <ArrowLeftRight size={18} strokeWidth={2.25} className="text-[var(--color-ledger)]" />
-                Settle up
-              </button>
-              <Link
-                to="/groups/new"
-                className="flex flex-col items-center gap-1.5 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] py-4 text-xs font-medium text-[var(--color-ink)] shadow-[var(--shadow-card)]"
-              >
-                <UsersRound size={18} strokeWidth={2.25} className="text-[var(--color-ledger)]" />
-                Add group
-              </Link>
-            </div>
+
+            {friends && friends.length > 0 && (
+              <>
+                <p className="mt-5 mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
+                  Friends
+                </p>
+                <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
+                  {friends.map((f) => (
+                    <Link
+                      key={f.friendId}
+                      to={`/friends/${f.friendId}`}
+                      className="flex items-center gap-3 p-3"
+                    >
+                      <Avatar name={f.friendName} size="md" />
+                      <p className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--color-ink)]">
+                        {f.friendName}
+                      </p>
+                      <span
+                        className={`font-mono-nums shrink-0 text-sm font-semibold ${
+                          f.net > 0 ? 'text-[var(--color-ledger)]' : 'text-[var(--color-receipt)]'
+                        }`}
+                      >
+                        {f.net > 0 ? '+' : '−'}
+                        {formatCurrency(Math.abs(f.net))}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
 
             {groups.length > 0 && (
               <>
@@ -237,15 +233,6 @@ export function HomePage() {
         )}
       </div>
       </div>
-
-      {showAddExpense && (
-        <ExpenseSheet
-          groupId={soloGroupId ?? undefined}
-          members={soloGroupId ? groups!.find((g) => g.id === soloGroupId)!.members : undefined}
-          currentUserId={userId}
-          onClose={() => setShowAddExpense(false)}
-        />
-      )}
     </div>
   )
 }
