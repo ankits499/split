@@ -109,7 +109,7 @@ export function HomePage() {
           <>
             <p className="text-sm text-[var(--color-ink-muted)]">
               {settled ? (
-                "Overall, you're all settled up"
+                "You're all settled up"
               ) : (
                 <>
                   Overall, {totalBalance > 0 ? 'you are owed' : 'you owe'}{' '}
