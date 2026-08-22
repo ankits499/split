@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Receipt, TrendingUp, TrendingDown, Check } from 'lucide-react'
+import { Receipt } from 'lucide-react'
 import { Moon, Sun } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
 import { useGroups } from '../features/groups/hooks'
@@ -107,54 +107,22 @@ export function HomePage() {
           </div>
         ) : (
           <>
-            <div
-              className={`flex items-center gap-3 rounded-2xl border-l-4 bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)] ${
-                settled
-                  ? 'border-l-[var(--color-line)]'
-                  : totalBalance > 0
-                    ? 'border-l-[var(--color-ledger)]'
-                    : 'border-l-[var(--color-receipt)]'
-              }`}
-            >
-              <span
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                  settled
-                    ? 'bg-[var(--color-surface-2)] text-[var(--color-ink-muted)]'
-                    : totalBalance > 0
-                      ? 'bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]'
-                      : 'bg-[var(--color-receipt-soft)] text-[var(--color-receipt)]'
-                }`}
-              >
-                {settled ? (
-                  <Check size={18} strokeWidth={2.5} />
-                ) : totalBalance > 0 ? (
-                  <TrendingUp size={18} strokeWidth={2.5} />
-                ) : (
-                  <TrendingDown size={18} strokeWidth={2.5} />
-                )}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
-                  Overall
-                </p>
-                {settled ? (
-                  <p className="mt-0.5 text-sm font-semibold text-[var(--color-ink-muted)]">All settled up</p>
-                ) : (
-                  <div className="mt-0.5 flex items-baseline gap-2">
-                    <p
-                      className={`font-mono-nums text-xl font-bold ${
-                        totalBalance > 0 ? 'text-[var(--color-ledger)]' : 'text-[var(--color-receipt)]'
-                      }`}
-                    >
-                      {formatCurrency(Math.abs(totalBalance))}
-                    </p>
-                    <p className="truncate text-xs text-[var(--color-ink-muted)]">
-                      {totalBalance > 0 ? 'you are owed' : 'you owe'}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+            <p className="text-sm text-[var(--color-ink-muted)]">
+              {settled ? (
+                "Overall, you're all settled up"
+              ) : (
+                <>
+                  Overall, {totalBalance > 0 ? 'you are owed' : 'you owe'}{' '}
+                  <span
+                    className={`font-mono-nums font-bold ${
+                      totalBalance > 0 ? 'text-[var(--color-ledger)]' : 'text-[var(--color-receipt)]'
+                    }`}
+                  >
+                    {formatCurrency(Math.abs(totalBalance))}
+                  </span>
+                </>
+              )}
+            </p>
 
             {friends && friends.length > 0 && (
               <>
