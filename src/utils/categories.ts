@@ -16,6 +16,7 @@ export const CATEGORIES: Category[] = [
   { id: 'shopping', label: 'Shopping', emoji: '🛍️', color: '#d97706' },
   { id: 'medical', label: 'Medical', emoji: '💊', color: '#dc2626' },
   { id: 'fitness', label: 'Fitness', emoji: '💪', color: '#059669' },
+  { id: 'selfcare', label: 'Self Care', emoji: '🧖', color: '#c026d3' },
   { id: 'other', label: 'Other', emoji: '🧾', color: '#4b5563' },
 ]
 
