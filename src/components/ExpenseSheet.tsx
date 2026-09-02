@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, X, Receipt, ChevronDown } from 'lucide-react'
+import { Check, X, Receipt, ChevronDown, History } from 'lucide-react'
 import type { Expense, Split } from '../features/expenses/hooks'
 import type { GroupMember } from '../features/groups/hooks'
 import { useGroups } from '../features/groups/hooks'
-import { useAddExpense, useUpdateExpense } from '../features/expenses/hooks'
-import { splitEqually, splitByPercentage, formatCurrency, toIsoDate } from '../utils/money'
-import { CATEGORIES } from '../utils/categories'
+import { useAddExpense, useUpdateExpense, useExpenseEditHistory } from '../features/expenses/hooks'
+import { splitEqually, splitByPercentage, formatCurrency, toIsoDate, firstName } from '../utils/money'
+import { CATEGORIES, categoryById } from '../utils/categories'
 
 type SplitMode = 'equal' | 'exact' | 'percent'
 
@@ -24,6 +24,30 @@ function equalPercentRecord(userIds: string[]): Record<string, string> {
   if (userIds.length === 0) return {}
   const each = Math.round((100 / userIds.length) * 100) / 100
   return Object.fromEntries(userIds.map((id) => [id, String(each)]))
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  description: 'description',
+  amount: 'amount',
+  paid_by: 'payer',
+  expense_date: 'date',
+  category: 'category',
+}
+
+function formatEditValue(field: string, value: string | null, members: GroupMember[]): string {
+  if (value === null) return '—'
+  switch (field) {
+    case 'amount':
+      return formatCurrency(Number(value))
+    case 'category':
+      return categoryById(value).label
+    case 'paid_by':
+      return members.find((m) => m.user_id === value)?.name ?? 'Someone'
+    case 'expense_date':
+      return new Date(value).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+    default:
+      return value
+  }
 }
 
 export function ExpenseSheet({
@@ -65,6 +89,8 @@ export function ExpenseSheet({
     expense ? splitsToPercentRecord(expense.splits, expense.amount) : {}
   )
   const [error, setError] = useState<string | null>(null)
+  const [showHistory, setShowHistory] = useState(false)
+  const { data: editHistory } = useExpenseEditHistory(expense?.id, isEditing && showHistory)
 
   useEffect(() => {
     if (needsGroupPicker) {
@@ -185,7 +211,7 @@ export function ExpenseSheet({
         splits: [...shares.entries()].map(([user_id, share]) => ({ user_id, share })),
       }
       if (expense) {
-        await updateExpense.mutateAsync({ id: expense.id, ...payload })
+        await updateExpense.mutateAsync({ id: expense.id, ...payload, original: expense })
       } else {
         await addExpense.mutateAsync(payload)
       }
@@ -389,6 +415,39 @@ export function ExpenseSheet({
           <div className="mb-4 flex items-center justify-between text-sm">
             <span className="font-semibold text-[var(--color-ink)]">Total</span>
             <span className="font-mono-nums font-semibold text-[var(--color-ink)]">{formatCurrency(total)}</span>
+          </div>
+        )}
+
+        {isEditing && expense?.edited_at && (
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => setShowHistory((v) => !v)}
+              className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-ink-muted)]"
+            >
+              <History size={13} strokeWidth={2.25} />
+              {showHistory ? 'Hide edit history' : 'View edit history'}
+            </button>
+            {showHistory && (
+              <div className="mt-2 space-y-1.5 rounded-xl border border-[var(--color-line)] p-3">
+                {!editHistory ? (
+                  <p className="text-xs text-[var(--color-ink-muted)]">Loading…</p>
+                ) : editHistory.length === 0 ? (
+                  <p className="text-xs text-[var(--color-ink-muted)]">No changes logged.</p>
+                ) : (
+                  editHistory.map((h) => (
+                    <p key={h.id} className="text-xs text-[var(--color-ink-muted)]">
+                      {firstName(members.find((m) => m.user_id === h.changed_by)?.name ?? 'Someone')} changed{' '}
+                      {FIELD_LABELS[h.field] ?? h.field}{' '}
+                      <span className="text-[var(--color-ink)]">
+                        {formatEditValue(h.field, h.old_value, members)} → {formatEditValue(h.field, h.new_value, members)}
+                      </span>{' '}
+                      · {new Date(h.changed_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                    </p>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         )}
 

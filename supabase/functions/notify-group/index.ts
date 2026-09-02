@@ -48,16 +48,22 @@ Deno.serve(async (req) => {
   let body: string;
 
   if (table === "expenses") {
-    const [{ data: group }, { data: payer }] = await Promise.all([
+    // Delete is attributed to whoever deleted it (deleted_by), not the
+    // payer — add/edit still credit the payer, matching the existing push
+    // copy ("X added/edited ..."). Recipients exclude that same actor.
+    const actorProfileId = event === "delete" ? record.deleted_by : record.paid_by;
+    const [{ data: group }, { data: actor }] = await Promise.all([
       supabase.from("groups").select("name").eq("id", record.group_id).single(),
-      supabase.from("profiles").select("name").eq("id", record.paid_by).single(),
+      supabase.from("profiles").select("name").eq("id", actorProfileId).single(),
     ]);
     groupId = record.group_id;
-    actorId = record.created_by;
+    actorId = event === "delete" ? record.deleted_by : record.created_by;
     title = group?.name ?? "Split";
-    body = event === "update"
-      ? `${payer?.name ?? "Someone"} edited "${record.description}"`
-      : `${payer?.name ?? "Someone"} added "${record.description}" — ${formatCurrency(Number(record.amount))}`;
+    body = event === "delete"
+      ? `${actor?.name ?? "Someone"} deleted "${record.description}"`
+      : event === "update"
+        ? `${actor?.name ?? "Someone"} edited "${record.description}"`
+        : `${actor?.name ?? "Someone"} added "${record.description}" — ${formatCurrency(Number(record.amount))}`;
   } else if (table === "settlements") {
     const [{ data: group }, { data: fromUser }, { data: toUser }] = await Promise.all([
       supabase.from("groups").select("name").eq("id", record.group_id).single(),

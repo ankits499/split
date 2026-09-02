@@ -12,6 +12,7 @@ import {
   MoreVertical,
   Check,
   X,
+  Plus,
 } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
 import {
@@ -25,6 +26,7 @@ import {
 import {
   useCycleExpenses,
   useDeleteExpense,
+  useExpenseDiffs,
   useExpenses,
   useGroupCycleSummaries,
   type Expense,
@@ -35,6 +37,7 @@ import { firstName, formatCurrency, formatShortDate } from '../utils/money'
 import { computeGroupCategoryBreakdown, type SpendingRange } from '../utils/spending'
 import { categoryById } from '../utils/categories'
 import { ExpenseSheet } from '../components/ExpenseSheet'
+import { BulkExpenseSheet } from '../components/BulkExpenseSheet'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Avatar } from '../components/Avatar'
 import { CategoryIcon } from '../components/CategoryIcon'
@@ -62,6 +65,8 @@ export function GroupDetailPage() {
 
   const { data: group, isLoading: groupLoading } = useGroup(groupId)
   const { data: expenses, isLoading: expensesLoading } = useExpenses(groupId, group?.cycle_number)
+  const editedExpenseIds = (expenses ?? []).filter((e) => e.edited_at).map((e) => e.id)
+  const { data: expenseDiffs } = useExpenseDiffs(editedExpenseIds)
   const { data: settlements } = useSettlements(groupId, group?.cycle_number)
   const { data: cycleSummaries } = useGroupCycleSummaries(groupId, group?.cycle_number)
   const deleteExpense = useDeleteExpense(groupId!)
@@ -73,6 +78,7 @@ export function GroupDetailPage() {
 
   const [tab, setTab] = useState<Tab>(routeState?.tab ?? 'expenses')
   const [editTarget, setEditTarget] = useState<Expense | null>(null)
+  const [showBulk, setShowBulk] = useState(false)
   const [showAddMember, setShowAddMember] = useState(false)
   const [memberEmail, setMemberEmail] = useState('')
   const [memberError, setMemberError] = useState<string | null>(null)
@@ -429,6 +435,15 @@ export function GroupDetailPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-[calc(7rem+env(safe-area-inset-bottom))]">
+      {tab === 'expenses' && (
+        <button
+          type="button"
+          onClick={() => setShowBulk(true)}
+          className="mb-3 hidden items-center gap-1.5 rounded-lg border border-[var(--color-line)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink)] sm:inline-flex"
+        >
+          <Plus size={15} strokeWidth={2.5} /> Bulk add
+        </button>
+      )}
       {tab === 'expenses' &&
         (expensesLoading ? (
           <p className="text-sm text-[var(--color-ink-muted)]">Loading…</p>
@@ -455,8 +470,33 @@ export function GroupDetailPage() {
                     <p className="truncate text-sm font-medium text-[var(--color-ink)]">{e.description}</p>
                     <p className="font-mono-nums truncate text-xs text-[var(--color-ink-muted)]">
                       {firstName(nameFor(e.paid_by))} paid {formatCurrency(e.amount)} · {formatShortDate(e.expense_date)}
-                      {e.edited_at && ' · Edited'}
+                      {e.edited_at && ` · Edited by ${firstName(e.edited_by ? nameFor(e.edited_by) : 'Someone')}`}
                     </p>
+                    {(expenseDiffs?.get(e.id)?.amount || expenseDiffs?.get(e.id)?.category) && (
+                      <p className="font-mono-nums truncate text-xs text-[var(--color-ink-muted)]">
+                        {expenseDiffs.get(e.id)?.amount && (
+                          <>
+                            <span className="line-through">
+                              {formatCurrency(Number(expenseDiffs.get(e.id)!.amount!.old))}
+                            </span>{' '}
+                            <span className="text-[var(--color-ink)]">
+                              {formatCurrency(Number(expenseDiffs.get(e.id)!.amount!.new))}
+                            </span>
+                          </>
+                        )}
+                        {expenseDiffs.get(e.id)?.amount && expenseDiffs.get(e.id)?.category ? ' · ' : ''}
+                        {expenseDiffs.get(e.id)?.category && (
+                          <>
+                            <span className="line-through">
+                              {categoryById(expenseDiffs.get(e.id)!.category!.old).label}
+                            </span>{' '}
+                            <span className="text-[var(--color-ink)]">
+                              {categoryById(expenseDiffs.get(e.id)!.category!.new).label}
+                            </span>
+                          </>
+                        )}
+                      </p>
+                    )}
                   </div>
                   {Math.abs(delta) > 0.01 && (
                     <span
@@ -628,6 +668,15 @@ export function GroupDetailPage() {
           </div>
         ))}
       </div>
+
+      {showBulk && (
+        <BulkExpenseSheet
+          groupId={groupId!}
+          members={group.members}
+          currentUserId={userId}
+          onClose={() => setShowBulk(false)}
+        />
+      )}
 
       {editTarget && (
         <ExpenseSheet

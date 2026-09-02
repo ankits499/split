@@ -7,6 +7,42 @@ export interface Split {
   share: number
 }
 
+export interface ValueDiff {
+  old: string
+  new: string
+}
+
+/** Latest amount/category diff per expense, batched over `expenseIds` — used
+ *  to show "₹10 → ₹15" style summaries on the Activity page and in a group's
+ *  expense list without a per-row query. */
+export async function fetchLatestFieldDiffs(
+  expenseIds: string[]
+): Promise<Map<string, { amount?: ValueDiff; category?: ValueDiff }>> {
+  const result = new Map<string, { amount?: ValueDiff; category?: ValueDiff }>()
+  if (expenseIds.length === 0) return result
+
+  const { data, error } = await supabase
+    .from('expense_edits')
+    .select('expense_id, changed_at, field, old_value, new_value')
+    .in('expense_id', expenseIds)
+    .in('field', ['amount', 'category'])
+    .order('changed_at', { ascending: true })
+  if (error) throw error
+
+  for (const row of data as {
+    expense_id: string
+    field: 'amount' | 'category'
+    old_value: string | null
+    new_value: string | null
+  }[]) {
+    if (row.old_value === null || row.new_value === null) continue
+    const existing = result.get(row.expense_id) ?? {}
+    existing[row.field] = { old: row.old_value, new: row.new_value }
+    result.set(row.expense_id, existing)
+  }
+  return result
+}
+
 export interface Expense {
   id: string
   group_id: string
@@ -193,6 +229,7 @@ export function useUpdateExpense(groupId: string) {
       splits: Split[]
       date: string
       category: string
+      original: Expense
     }) => {
       const { error } = await supabase
         .from('expenses')
@@ -215,6 +252,30 @@ export function useUpdateExpense(groupId: string) {
         input.splits.map((s) => ({ expense_id: input.id, user_id: s.user_id, share: s.share }))
       )
       if (splitErr) throw splitErr
+
+      const { original } = input
+      const changedFields: { field: string; old_value: string; new_value: string }[] = []
+      if (original.description !== input.description) {
+        changedFields.push({ field: 'description', old_value: original.description, new_value: input.description })
+      }
+      if (original.amount !== input.amount) {
+        changedFields.push({ field: 'amount', old_value: String(original.amount), new_value: String(input.amount) })
+      }
+      if (original.paid_by !== input.paidBy) {
+        changedFields.push({ field: 'paid_by', old_value: original.paid_by, new_value: input.paidBy })
+      }
+      if (original.expense_date !== input.date) {
+        changedFields.push({ field: 'expense_date', old_value: original.expense_date, new_value: input.date })
+      }
+      if (original.category !== input.category) {
+        changedFields.push({ field: 'category', old_value: original.category, new_value: input.category })
+      }
+      if (changedFields.length > 0) {
+        const { error: editErr } = await supabase.from('expense_edits').insert(
+          changedFields.map((f) => ({ expense_id: input.id, changed_by: session!.user.id, ...f }))
+        )
+        if (editErr) throw editErr
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
@@ -225,7 +286,43 @@ export function useUpdateExpense(groupId: string) {
   })
 }
 
+/** Latest amount/category diff per expense id, for a currently-loaded expense list. */
+export function useExpenseDiffs(expenseIds: string[]) {
+  return useQuery({
+    queryKey: ['expense-diffs', [...expenseIds].sort().join(',')],
+    queryFn: () => fetchLatestFieldDiffs(expenseIds),
+    enabled: expenseIds.length > 0,
+  })
+}
+
+export interface ExpenseEdit {
+  id: string
+  changed_by: string
+  changed_at: string
+  field: string
+  old_value: string | null
+  new_value: string | null
+}
+
+/** Full field-level edit history for one expense, oldest first — feeds the "Edit history" panel. */
+export function useExpenseEditHistory(expenseId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ['expense-edits', expenseId],
+    queryFn: async (): Promise<ExpenseEdit[]> => {
+      const { data, error } = await supabase
+        .from('expense_edits')
+        .select('id, changed_by, changed_at, field, old_value, new_value')
+        .eq('expense_id', expenseId!)
+        .order('changed_at', { ascending: true })
+      if (error) throw error
+      return data
+    },
+    enabled: !!expenseId && enabled,
+  })
+}
+
 export function useDeleteExpense(groupId: string) {
+  const { session } = useAuth()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (expenseId: string) => {
@@ -234,7 +331,7 @@ export function useDeleteExpense(groupId: string) {
       // with deleted_at set, so it never counts again.
       const { error } = await supabase
         .from('expenses')
-        .update({ deleted_at: new Date().toISOString() })
+        .update({ deleted_at: new Date().toISOString(), deleted_by: session!.user.id })
         .eq('id', expenseId)
       if (error) throw error
     },

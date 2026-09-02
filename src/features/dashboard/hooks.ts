@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
 import { useGroups } from '../groups/hooks'
-import type { Expense } from '../expenses/hooks'
+import type { Expense, ValueDiff } from '../expenses/hooks'
+import { fetchLatestFieldDiffs } from '../expenses/hooks'
 import type { Settlement } from '../settlements/hooks'
 import { SPENDING_WINDOW_DAYS } from '../../utils/spending'
 import { toIsoDate } from '../../utils/money'
@@ -165,6 +166,9 @@ export interface ActivityEntry {
   addedByName?: string
   editedByName?: string
   isDeleted?: boolean
+  deletedByName?: string
+  amountDiff?: ValueDiff
+  categoryDiff?: ValueDiff
 }
 
 const ACTIVITY_PAGE_SIZE = 25
@@ -187,7 +191,7 @@ export function useActivityFeed() {
           supabase
             .from('expenses')
             .select(
-              'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, created_by, edited_at, edited_by, deleted_at, expense_splits(user_id, share)'
+              'id, group_id, description, amount, paid_by, expense_date, created_at, category, cycle, created_by, edited_at, edited_by, deleted_at, deleted_by, expense_splits(user_id, share)'
             )
             .in('group_id', groupIds)
             .order('created_at', { ascending: false })
@@ -207,11 +211,17 @@ export function useActivityFeed() {
         (groups ?? []).flatMap((g) => g.members.map((m) => [m.user_id, m.name] as const))
       )
 
-      const deletedIds = new Set(
-        (expenseRows as { id: string; deleted_at: string | null }[])
+      const deletedByById = new Map(
+        (expenseRows as { id: string; deleted_at: string | null; deleted_by: string | null }[])
           .filter((e) => e.deleted_at)
-          .map((e) => e.id)
+          .map((e) => [e.id, e.deleted_by] as const)
       )
+
+      const editedExpenseIds = (expenseRows as { id: string; edited_at: string | null }[])
+        .filter((e) => e.edited_at)
+        .map((e) => e.id)
+
+      const diffsByExpenseId = await fetchLatestFieldDiffs(editedExpenseIds)
 
       const expenses: Expense[] = expenseRows.map((e) => ({
         id: e.id,
@@ -245,7 +255,12 @@ export function useActivityFeed() {
           editedByName: e.edited_at
             ? (e.edited_by && memberNameById.get(e.edited_by)) || 'Someone'
             : undefined,
-          isDeleted: deletedIds.has(e.id),
+          isDeleted: deletedByById.has(e.id),
+          deletedByName: deletedByById.has(e.id)
+            ? (deletedByById.get(e.id) && memberNameById.get(deletedByById.get(e.id)!)) || 'Someone'
+            : undefined,
+          amountDiff: diffsByExpenseId.get(e.id)?.amount,
+          categoryDiff: diffsByExpenseId.get(e.id)?.category,
         })),
         ...settlements.map((s) => ({
           kind: 'settlement' as const,

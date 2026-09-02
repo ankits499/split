@@ -5,6 +5,7 @@ import { useActivityFeed, type ActivityEntry } from '../features/dashboard/hooks
 import { CategoryIcon } from '../components/CategoryIcon'
 import { formatCurrency, firstName } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
+import { categoryById } from '../utils/categories'
 
 function dateLabel(iso: string): string {
   const date = new Date(iso)
@@ -75,13 +76,34 @@ export function ActivityPage() {
                         <p className="truncate text-xs text-[var(--color-ink-muted)]">
                           {entry.groupName} · {formatCurrency(entry.expense.amount)}
                           {entry.isDeleted
-                            ? ' · Deleted'
+                            ? ` · Deleted by ${firstName(entry.deletedByName ?? 'Someone')}`
                             : entry.editedByName
                               ? ` · Edited by ${firstName(entry.editedByName)}`
                               : entry.addedByName
                                 ? ` · Added by ${firstName(entry.addedByName)}`
                                 : ''}
                         </p>
+                        {!entry.isDeleted && (entry.amountDiff || entry.categoryDiff) && (
+                          <p className="truncate text-xs text-[var(--color-ink-muted)]">
+                            {entry.amountDiff && (
+                              <>
+                                <span className="line-through">{formatCurrency(Number(entry.amountDiff.old))}</span>{' '}
+                                <span className="text-[var(--color-ink)]">
+                                  {formatCurrency(Number(entry.amountDiff.new))}
+                                </span>
+                              </>
+                            )}
+                            {entry.amountDiff && entry.categoryDiff ? ' · ' : ''}
+                            {entry.categoryDiff && (
+                              <>
+                                <span className="line-through">{categoryById(entry.categoryDiff.old).label}</span>{' '}
+                                <span className="text-[var(--color-ink)]">
+                                  {categoryById(entry.categoryDiff.new).label}
+                                </span>
+                              </>
+                            )}
+                          </p>
+                        )}
                       </div>
                       {!entry.isDeleted &&
                         (() => {
