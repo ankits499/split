@@ -4,6 +4,7 @@ import type { GroupMember } from '../features/groups/hooks'
 import { useAddExpense } from '../features/expenses/hooks'
 import { splitEqually, toIsoDate, formatCurrency, firstName, evalAmount } from '../utils/money'
 import { CATEGORIES } from '../utils/categories'
+import { guessCategory } from '../utils/categoryGuess'
 
 interface Row {
   description: string
@@ -37,7 +38,7 @@ function parsePaste(text: string, members: GroupMember[], currentUserId: string)
         amount: (amount ?? '').replace(/[^0-9.+-]/g, ''),
         paidBy: member?.user_id ?? currentUserId,
         date: date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : today,
-        category: cat?.id ?? 'other',
+        category: cat?.id ?? guessCategory(description ?? '') ?? 'other',
       }
     })
 }
@@ -61,6 +62,16 @@ export function BulkExpenseSheet({
 
   const setRow = (i: number, patch: Partial<Row>) =>
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)))
+
+  // Auto-categorise from the description while the row is still on the default.
+  const setDescription = (i: number, value: string) =>
+    setRows((prev) =>
+      prev.map((r, idx) =>
+        idx === i
+          ? { ...r, description: value, category: r.category === 'other' ? guessCategory(value) ?? 'other' : r.category }
+          : r
+      )
+    )
 
   const rowAmount = (r: Row) => evalAmount(r.amount) ?? 0
   const valid = rows.filter((r) => r.description.trim() && rowAmount(r) > 0)
@@ -159,7 +170,7 @@ export function BulkExpenseSheet({
                     <input
                       autoFocus={i === 0}
                       value={r.description}
-                      onChange={(e) => setRow(i, { description: e.target.value })}
+                      onChange={(e) => setDescription(i, e.target.value)}
                       onPaste={handlePaste(i)}
                       placeholder="What was it for?"
                       className={inputCls}

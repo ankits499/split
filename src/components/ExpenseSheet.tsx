@@ -6,6 +6,7 @@ import { useGroups } from '../features/groups/hooks'
 import { useAddExpense, useUpdateExpense, useExpenseEditHistory } from '../features/expenses/hooks'
 import { splitEqually, splitByPercentage, formatCurrency, toIsoDate, firstName, evalAmount } from '../utils/money'
 import { CATEGORIES, categoryById } from '../utils/categories'
+import { guessCategory } from '../utils/categoryGuess'
 
 type SplitMode = 'equal' | 'exact' | 'percent'
 
@@ -77,6 +78,8 @@ export function ExpenseSheet({
   const [amount, setAmount] = useState(expense ? String(expense.amount) : '')
   const [date, setDate] = useState(expense?.expense_date ?? toIsoDate(new Date()))
   const [category, setCategory] = useState(expense?.category ?? 'other')
+  // Auto-pick a category from the description until the user picks one by hand.
+  const categoryTouched = useRef(isEditing)
   const [paidBy, setPaidBy] = useState(expense?.paid_by ?? currentUserId)
   const [mode, setMode] = useState<SplitMode>('equal')
   const [included, setIncluded] = useState<Set<string>>(
@@ -287,7 +290,11 @@ export function ExpenseSheet({
           autoFocus={!needsGroupPicker}
           placeholder="What was it for?"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value
+            setDescription(v)
+            if (!categoryTouched.current) setCategory(guessCategory(v) ?? 'other')
+          }}
           className="mb-3 w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-3 text-[var(--color-ink)] outline-none focus:border-[var(--color-ledger)]"
         />
 
@@ -346,7 +353,10 @@ export function ExpenseSheet({
             <button
               type="button"
               key={c.id}
-              onClick={() => setCategory(c.id)}
+              onClick={() => {
+                categoryTouched.current = true
+                setCategory(c.id)
+              }}
               className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
                 category === c.id
                   ? 'border-[var(--color-ledger)] bg-[var(--color-ledger)] text-white'
