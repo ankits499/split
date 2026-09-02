@@ -4,7 +4,7 @@ import type { Expense, Split } from '../features/expenses/hooks'
 import type { GroupMember } from '../features/groups/hooks'
 import { useGroups } from '../features/groups/hooks'
 import { useAddExpense, useUpdateExpense, useExpenseEditHistory } from '../features/expenses/hooks'
-import { splitEqually, splitByPercentage, formatCurrency, toIsoDate, firstName } from '../utils/money'
+import { splitEqually, splitByPercentage, formatCurrency, toIsoDate, firstName, evalAmount } from '../utils/money'
 import { CATEGORIES, categoryById } from '../utils/categories'
 
 type SplitMode = 'equal' | 'exact' | 'percent'
@@ -109,7 +109,16 @@ export function ExpenseSheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allGroups])
 
-  const total = parseFloat(amount) || 0
+  const total = evalAmount(amount) ?? 0
+  const amountInvalid = amount.trim() !== '' && evalAmount(amount) === null
+  const showAmountResult = /[+-]/.test(amount.trim().slice(1)) && !amountInvalid && total > 0
+
+  const appendOp = (op: '+' | '-') =>
+    setAmount((a) => {
+      const t = a.trimEnd()
+      if (!t) return t
+      return /[+-]$/.test(t) ? t.slice(0, -1) + op : t + op
+    })
   const includedMembers = members.filter((m) => included.has(m.user_id))
   const includedIds = includedMembers.map((m) => m.user_id).join(',')
 
@@ -177,6 +186,10 @@ export function ExpenseSheet({
     setError(null)
     if (!groupId) {
       setError('Choose a group first')
+      return
+    }
+    if (amountInvalid) {
+      setError("That amount isn't a valid number")
       return
     }
     if (!description.trim() || total <= 0) {
@@ -279,14 +292,39 @@ export function ExpenseSheet({
         />
 
         <input
-          type="number"
+          type="text"
           inputMode="decimal"
-          step="0.01"
+          autoComplete="off"
           placeholder="₹ 0.00"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="font-mono-nums mb-3 w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-3 text-center text-2xl font-semibold text-[var(--color-ink)] outline-none focus:border-[var(--color-ledger)]"
+          className={`font-mono-nums w-full rounded-xl border bg-transparent px-4 py-3 text-center text-2xl font-semibold text-[var(--color-ink)] outline-none focus:border-[var(--color-ledger)] ${
+            amountInvalid ? 'border-[var(--color-receipt)]' : 'border-[var(--color-line)]'
+          }`}
         />
+        <div className="mb-3 mt-2 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => appendOp('-')}
+            aria-label="Subtract"
+            className="font-mono-nums h-8 w-8 rounded-lg border border-[var(--color-line)] text-lg leading-none text-[var(--color-ink)] active:opacity-70"
+          >
+            −
+          </button>
+          <button
+            type="button"
+            onClick={() => appendOp('+')}
+            aria-label="Add"
+            className="font-mono-nums h-8 w-8 rounded-lg border border-[var(--color-line)] text-lg leading-none text-[var(--color-ink)] active:opacity-70"
+          >
+            +
+          </button>
+          {showAmountResult && (
+            <span className="font-mono-nums ml-1 text-sm text-[var(--color-ink-muted)]">
+              = {formatCurrency(total)}
+            </span>
+          )}
+        </div>
 
         <div className="mb-4 w-full overflow-hidden rounded-xl border border-[var(--color-line)] focus-within:border-[var(--color-ledger)]">
           <input

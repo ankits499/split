@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
 import type { GroupMember } from '../features/groups/hooks'
 import { useAddExpense } from '../features/expenses/hooks'
-import { splitEqually, toIsoDate, formatCurrency, firstName } from '../utils/money'
+import { splitEqually, toIsoDate, formatCurrency, firstName, evalAmount } from '../utils/money'
 import { CATEGORIES } from '../utils/categories'
 
 interface Row {
@@ -34,7 +34,7 @@ function parsePaste(text: string, members: GroupMember[], currentUserId: string)
       )
       return {
         description: description ?? '',
-        amount: (amount ?? '').replace(/[^0-9.]/g, ''),
+        amount: (amount ?? '').replace(/[^0-9.+-]/g, ''),
         paidBy: member?.user_id ?? currentUserId,
         date: date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : today,
         category: cat?.id ?? 'other',
@@ -62,8 +62,9 @@ export function BulkExpenseSheet({
   const setRow = (i: number, patch: Partial<Row>) =>
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)))
 
-  const valid = rows.filter((r) => r.description.trim() && Number(r.amount) > 0)
-  const validTotal = valid.reduce((sum, r) => sum + Number(r.amount), 0)
+  const rowAmount = (r: Row) => evalAmount(r.amount) ?? 0
+  const valid = rows.filter((r) => r.description.trim() && rowAmount(r) > 0)
+  const validTotal = valid.reduce((sum, r) => sum + rowAmount(r), 0)
 
   const handlePaste = (i: number) => (e: React.ClipboardEvent) => {
     const text = e.clipboardData.getData('text')
@@ -86,7 +87,7 @@ export function BulkExpenseSheet({
     }
     for (const [i, r] of valid.entries()) {
       setProgress({ done: i, total: valid.length })
-      const amount = Number(r.amount)
+      const amount = rowAmount(r)
       const parts = splitEqually(amount, members.length)
       try {
         await addExpense.mutateAsync({
@@ -166,12 +167,13 @@ export function BulkExpenseSheet({
                   </td>
                   <td className="pr-2">
                     <input
-                      type="number"
+                      type="text"
                       inputMode="decimal"
-                      step="0.01"
+                      autoComplete="off"
                       value={r.amount}
                       onChange={(e) => setRow(i, { amount: e.target.value })}
                       placeholder="0.00"
+                      title="Accepts + and −, e.g. 100-18-20"
                       className={`${inputCls} font-mono-nums w-24 text-right`}
                     />
                   </td>

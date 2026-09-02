@@ -13,6 +13,20 @@ export function toIsoDate(d: Date): string {
   return `${year}-${month}-${day}`
 }
 
+/** Evaluate a plain +/− amount expression like "100-18-20" → 62.
+ *  Returns null when the input is not a number or a +/− sum of numbers
+ *  (rejects `*`, `/`, letters, trailing operators). Leading unary minus
+ *  allowed; result rounded to paise. */
+export function evalAmount(input: string): number | null {
+  const s = input.trim()
+  if (!s) return null
+  if (!/^-?\d*\.?\d+(\s*[+-]\s*\d*\.?\d+)*$/.test(s)) return null
+  const tokens = s.match(/[+-]?\s*\d*\.?\d+/g)
+  if (!tokens) return null
+  const sum = tokens.reduce((acc, t) => acc + parseFloat(t.replace(/\s+/g, '')), 0)
+  return Math.round(sum * 100) / 100
+}
+
 export function formatCurrency(amount: number, currency = 'INR'): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
