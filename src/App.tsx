@@ -3,7 +3,6 @@ import { useAuth } from './features/auth/AuthProvider'
 import { LoginPage } from './features/auth/LoginPage'
 import { BottomNav } from './components/BottomNav'
 import { Skeleton } from './components/ui/Skeleton'
-import { SafeAreaDebug } from './components/SafeAreaDebug'
 
 export function AppLayout() {
   const { session, loading } = useAuth()
@@ -22,7 +21,6 @@ export function AppLayout() {
 
   return (
     <>
-      <SafeAreaDebug />
       <Outlet />
       <BottomNav />
     </>
