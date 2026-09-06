@@ -20,14 +20,14 @@ function NavItem({ to, label, Icon, end }: { to: string; label: string; Icon: ty
       to={to}
       end={end}
       className={({ isActive }) =>
-        `flex flex-1 flex-col items-center gap-1 rounded-[1.4rem] px-2 py-1.5 text-[11px] font-medium transition-colors ${
+        `flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.5rem] px-2 py-1.5 text-[10px] font-medium transition-all duration-200 ${
           isActive
             ? 'bottom-nav-item-active text-[var(--color-ledger)]'
-            : 'text-[var(--color-ink-muted)]'
+            : 'text-[var(--color-ink-muted)] hover:bg-white/15 hover:text-[var(--color-ink)] dark:hover:bg-white/[0.05]'
         }`
       }
     >
-      <Icon size={22} strokeWidth={2} />
+      <Icon size={19} strokeWidth={2} />
       {label}
     </NavLink>
   )
@@ -64,8 +64,8 @@ export function BottomNav() {
           here creates a containing block for it. Pages reserve bottom space
           for it via the .flex-1.overflow-y-auto rule in index.css. */}
       <nav
-        className="bottom-nav-glass fixed left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-[400px] -translate-x-1/2 items-center rounded-[2rem] px-1.5 py-1"
-        style={{ bottom: 'max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))' }}
+        className="bottom-nav-glass fixed left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-[21rem] -translate-x-1/2 items-center gap-1 rounded-[2rem] p-1.5"
+        style={{ bottom: 'max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}
       >
         {showQuickAdd && (
           <>

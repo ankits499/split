@@ -192,7 +192,7 @@ textarea {
    shadows (bright top-left, dark bottom-right) so the pill reads as a raised
    piece of glass over whatever page content sits behind it. */
 .bottom-nav-glass {
-  background-color: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  background-color: color-mix(in srgb, var(--color-surface) 12%, transparent);
   backdrop-filter: blur(8px) saturate(150%);
   -webkit-backdrop-filter: blur(8px) saturate(150%);
   box-shadow:
@@ -208,7 +208,7 @@ textarea {
 }
 
 .bottom-nav-item-active {
-  background-color: color-mix(in srgb, var(--color-surface) 55%, transparent);
+  background-color: color-mix(in srgb, var(--color-surface) 28%, transparent);
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 10%),
     inset 2px 1px 0 -1px rgb(255 255 255 / 62%),
