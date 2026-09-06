@@ -56,6 +56,14 @@ export function BottomNav() {
         />
       )}
 
+      {showQuickAdd && (
+        <button
+          className="fixed inset-0 z-10 cursor-default bg-black/40"
+          aria-label="Close quick actions"
+          onClick={() => setShowQuickAdd(false)}
+        />
+      )}
+
       {/* Floating glass pill (Study Guide Site's bottom nav). position:fixed,
           anchored to the true viewport; #root { overflow: hidden } plus each
           page's own scroll region means the document never scrolls, so there's
@@ -66,39 +74,32 @@ export function BottomNav() {
         style={{ bottom: 'max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}
       >
         {showQuickAdd && (
-          <>
+          <div className="animate-rise absolute bottom-full left-1/2 z-40 mb-2 w-[calc(100%-2rem)] max-w-[400px] -translate-x-1/2 overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] shadow-lg">
             <button
-              className="fixed inset-0 z-30 cursor-default bg-black/40"
-              aria-label="Close quick actions"
-              onClick={() => setShowQuickAdd(false)}
-            />
-            <div className="animate-rise absolute bottom-full left-1/2 z-40 mb-2 w-[calc(100%-2rem)] max-w-[400px] -translate-x-1/2 overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] shadow-lg">
-              <button
-                onClick={() => {
-                  setShowQuickAdd(false)
-                  setShowExpenseSheet(true)
-                }}
-                className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-bg)]"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
-                  <Receipt size={17} strokeWidth={2.25} />
-                </span>
-                New expense
-              </button>
-              <button
-                onClick={() => {
-                  setShowQuickAdd(false)
-                  navigate('/groups/new')
-                }}
-                className="flex w-full items-center gap-3 border-t border-[var(--color-line)] px-4 py-3.5 text-left text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-bg)]"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
-                  <UsersRound size={17} strokeWidth={2.25} />
-                </span>
-                New group
-              </button>
-            </div>
-          </>
+              onClick={() => {
+                setShowQuickAdd(false)
+                setShowExpenseSheet(true)
+              }}
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-bg)]"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
+                <Receipt size={17} strokeWidth={2.25} />
+              </span>
+              New expense
+            </button>
+            <button
+              onClick={() => {
+                setShowQuickAdd(false)
+                navigate('/groups/new')
+              }}
+              className="flex w-full items-center gap-3 border-t border-[var(--color-line)] px-4 py-3.5 text-left text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-bg)]"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
+                <UsersRound size={17} strokeWidth={2.25} />
+              </span>
+              New group
+            </button>
+          </div>
         )}
 
         {SIDE_ITEMS_LEFT.map((item) => (
