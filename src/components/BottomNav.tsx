@@ -96,9 +96,9 @@ export function BottomNav() {
       <nav
         className="fixed inset-x-0 bottom-0 z-10 flex items-center border-t border-[var(--color-line)] bg-[var(--color-surface)]"
         // The full home-indicator inset below an already-padded row leaves a
-        // blank slab under the icons; trim it so the bar reads as one piece,
-        // with a floor so devices reporting 0 still get real padding.
-        style={{ paddingBottom: 'max(0.5rem, calc(env(safe-area-inset-bottom) - 0.75rem))' }}
+        // blank slab under the icons; trim most of it so the bar reads as one
+        // piece, with a floor so devices reporting 0 still get real padding.
+        style={{ paddingBottom: 'max(0.5rem, calc(env(safe-area-inset-bottom) - 1.5rem))' }}
       >
         {SIDE_ITEMS_LEFT.map((item) => (
           <NavItem key={item.to} {...item} />
