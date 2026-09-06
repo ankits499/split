@@ -65,7 +65,10 @@ export function BottomNav() {
           not a calc() reserving space for an overlay. */}
       <nav
         className="relative shrink-0 flex items-center border-t border-[var(--color-line)] bg-[var(--color-surface)]"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        // The full home-indicator inset below an already-padded icon row
+        // leaves a visibly blank strip; trim most of it, floored so
+        // Home-button devices (inset 0) still get real padding.
+        style={{ paddingBottom: 'max(0.5rem, calc(env(safe-area-inset-bottom) - 1.5rem))' }}
       >
         {showQuickAdd && (
           <>
