@@ -14,18 +14,17 @@ const SIDE_ITEMS_RIGHT = [
   { to: '/profile', label: 'Profile', Icon: CircleUser, end: false },
 ]
 
+const itemClass = ({ isActive }: { isActive: boolean }) =>
+  `flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.5rem] px-2 py-1.5 text-[10px] font-medium transition-all duration-200 ${
+    isActive
+      ? 'bottom-nav-item-active text-[var(--color-ledger)]'
+      : 'text-[var(--color-ink-muted)] hover:bg-white/15 hover:text-[var(--color-ink)] dark:hover:bg-white/[0.05]'
+  }`
+
 function NavItem({ to, label, Icon, end }: { to: string; label: string; Icon: typeof House; end: boolean }) {
   return (
-    <NavLink
-      to={to}
-      end={end}
-      className={({ isActive }) =>
-        `flex flex-1 flex-col items-center gap-1 pt-2 pb-1 text-[11px] font-medium ${
-          isActive ? 'text-[var(--color-ledger)]' : 'text-[var(--color-ink-muted)]'
-        }`
-      }
-    >
-      <Icon size={22} strokeWidth={2} />
+    <NavLink to={to} end={end} className={itemClass}>
+      <Icon size={19} strokeWidth={2} />
       {label}
     </NavLink>
   )
@@ -57,18 +56,14 @@ export function BottomNav() {
         />
       )}
 
-      {/* A normal flex child at the end of #root's column (see index.css),
-          not position:fixed — it sits wherever layout puts it, so it can't
-          drift from the true screen edge the way a viewport-anchored fixed
-          element can on iOS (Safari/PWA chrome resize quirks). Every page's
-          own scroll area just needs its usual bottom breathing room now,
-          not a calc() reserving space for an overlay. */}
+      {/* Floating glass pill (Study Guide Site's bottom nav). position:fixed,
+          anchored to the true viewport; #root { overflow: hidden } plus each
+          page's own scroll region means the document never scrolls, so there's
+          no overscroll to drag it. Pages reserve space via the
+          .flex-1.overflow-y-auto rule in index.css. */}
       <nav
-        className="relative shrink-0 flex items-center border-t border-[var(--color-line)] bg-[var(--color-surface)]"
-        // The full home-indicator inset below an already-padded icon row
-        // leaves a visibly blank strip; trim most of it, floored so
-        // Home-button devices (inset 0) still get real padding.
-        style={{ paddingBottom: 'max(0.5rem, calc(env(safe-area-inset-bottom) - 1.5rem))' }}
+        className="bottom-nav-glass fixed left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-[21rem] -translate-x-1/2 items-center gap-1 rounded-[2rem] p-1.5"
+        style={{ bottom: 'max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem))' }}
       >
         {showQuickAdd && (
           <>
