@@ -238,7 +238,7 @@ export function ExpenseSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/40" onClick={onClose} role="presentation">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40" onClick={onClose} role="presentation">
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={submit}
