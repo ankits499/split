@@ -6,6 +6,7 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { formatCurrency, firstName } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
 import { categoryById } from '../utils/categories'
+import { Skeleton } from '../components/ui/Skeleton'
 
 function dateLabel(iso: string): string {
   const date = new Date(iso)
@@ -41,7 +42,17 @@ export function ActivityPage() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       {isLoading ? (
-        <p className="py-8 text-center text-sm text-[var(--color-ink-muted)]">Loading…</p>
+        <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 p-3">
+              <Skeleton className="h-9 w-9 shrink-0 !rounded-full" />
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-32" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : sections.length === 0 ? (
         <div className="flex flex-col items-center rounded-2xl border border-dashed border-[var(--color-line)] p-8 text-center">
           <Receipt size={28} strokeWidth={1.75} className="mb-2 text-[var(--color-ink-muted)]" />

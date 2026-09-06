@@ -13,6 +13,7 @@ import { InstallPrompt } from '../components/InstallPrompt'
 import { OnlineIndicator } from '../components/OnlineIndicator'
 import { formatCurrency, firstName } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
+import { Skeleton } from '../components/ui/Skeleton'
 
 /** Groups ordered by most recent expense activity (from the already-fetched
  *  recent-expenses list), with any remaining groups appended in their
@@ -46,10 +47,11 @@ function greeting() {
 
 export function HomePage() {
   const { id: userId, name } = useLocalUser()
-  const { data: groups } = useGroups()
-  const { data: summary } = useOverallSummary()
-  const { data: friends } = useFriendsSummary()
+  const { data: groups, isLoading: groupsLoading } = useGroups()
+  const { data: summary, isLoading: summaryLoading } = useOverallSummary()
+  const { data: friends, isLoading: friendsLoading } = useFriendsSummary()
   const { theme, toggle: toggleTheme } = useTheme()
+  const initialLoading = groupsLoading || summaryLoading || friendsLoading
 
   const totalBalance = summary?.totalBalance ?? 0
   const settled = Math.abs(totalBalance) < 0.005
@@ -92,7 +94,29 @@ export function HomePage() {
       <InstallPrompt />
 
       <div className="px-4">
-        {!groups || groups.length === 0 ? (
+        {initialLoading ? (
+          <div>
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="mt-5 mb-2 h-3 w-16" />
+            <div className="space-y-2">
+              {[0, 1].map((i) => (
+                <Skeleton key={i} className="h-[60px] w-full !rounded-2xl" />
+              ))}
+            </div>
+            <Skeleton className="mt-6 mb-2 h-3 w-24" />
+            <div className="flex gap-2">
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} className="h-[92px] w-28 shrink-0 !rounded-2xl" />
+              ))}
+            </div>
+            <Skeleton className="mt-6 mb-2 h-3 w-32" />
+            <div className="space-y-px overflow-hidden rounded-2xl">
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} className="h-[62px] w-full !rounded-none" />
+              ))}
+            </div>
+          </div>
+        ) : !groups || groups.length === 0 ? (
           <div className="flex flex-col items-center rounded-2xl border border-dashed border-[var(--color-line)] p-8 text-center">
             <Receipt size={28} strokeWidth={1.75} className="mb-2 text-[var(--color-ink-muted)]" />
             <p className="text-sm text-[var(--color-ink-muted)]">

@@ -5,7 +5,18 @@ import { useGroups } from '../features/groups/hooks'
 import { useFriendsSummary } from '../features/friends/hooks'
 import { GroupCardContainer } from '../components/GroupCardContainer'
 import { Avatar } from '../components/Avatar'
+import { Skeleton } from '../components/ui/Skeleton'
 import { formatCurrency } from '../utils/money'
+
+function ListSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[0, 1, 2].map((i) => (
+        <Skeleton key={i} className="h-[68px] w-full !rounded-2xl" />
+      ))}
+    </div>
+  )
+}
 
 type View = 'groups' | 'friends'
 
@@ -49,7 +60,7 @@ export function GroupsListPage() {
       <div className="flex-1 overflow-y-auto px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         {view === 'groups' ? (
           groupsLoading ? (
-            <p className="py-8 text-center text-sm text-[var(--color-ink-muted)]">Loading…</p>
+            <ListSkeleton />
           ) : !groups || groups.length === 0 ? (
             <div className="flex flex-col items-center rounded-2xl border border-dashed border-[var(--color-line)] p-8 text-center">
               <Users size={28} strokeWidth={1.75} className="mb-2 text-[var(--color-ink-muted)]" />
@@ -69,7 +80,7 @@ export function GroupsListPage() {
             </div>
           )
         ) : friendsLoading ? (
-          <p className="py-8 text-center text-sm text-[var(--color-ink-muted)]">Loading…</p>
+          <ListSkeleton />
         ) : !friends || friends.length === 0 ? (
           <div className="flex flex-col items-center rounded-2xl border border-dashed border-[var(--color-line)] p-8 text-center">
             <UsersRound size={28} strokeWidth={1.75} className="mb-2 text-[var(--color-ink-muted)]" />

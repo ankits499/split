@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { formatCurrency } from '../utils/money'
 import { Avatar } from './Avatar'
+import { Skeleton } from './ui/Skeleton'
 
 export function GroupCard({
   id,
@@ -34,7 +35,10 @@ export function GroupCard({
         </div>
         <div className="text-right">
           {loading ? (
-            <p className="text-xs text-[var(--color-ink-muted)]">…</p>
+            <div className="flex flex-col items-end gap-1">
+              <Skeleton className="h-2.5 w-16" />
+              <Skeleton className="h-4 w-14" />
+            </div>
           ) : settled ? (
             <p className="text-xs text-[var(--color-ink-muted)]">Settled up</p>
           ) : (

@@ -2,12 +2,17 @@ import { Outlet } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthProvider'
 import { LoginPage } from './features/auth/LoginPage'
 import { BottomNav } from './components/BottomNav'
+import { Skeleton } from './components/ui/Skeleton'
 
 export function AppLayout() {
   const { session, loading } = useAuth()
 
   if (loading) {
-    return <div className="flex flex-1 items-center justify-center text-[var(--color-ink-muted)]">Loading…</div>
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <Skeleton className="h-9 w-9 !rounded-full" />
+      </div>
+    )
   }
 
   if (!session) {

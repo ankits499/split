@@ -13,6 +13,7 @@ import {
   Check,
   X,
   Plus,
+  ChevronDown,
 } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
 import {
@@ -42,6 +43,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Avatar } from '../components/Avatar'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { DonutChart } from '../components/DonutChart'
+import { Skeleton } from '../components/ui/Skeleton'
 
 type Tab = 'expenses' | 'balances' | 'settlements' | 'history'
 
@@ -49,6 +51,22 @@ type Tab = 'expenses' | 'balances' | 'settlements' | 'history'
 // the full fetched history for correctness, this only bounds DOM size as a
 // group's history grows over months of use.
 const PAGE_SIZE = 20
+
+function ExpenseRowsSkeleton() {
+  return (
+    <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className="flex items-center gap-3 p-3">
+          <Skeleton className="h-9 w-9 shrink-0 !rounded-full" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <Skeleton className="h-3.5 w-32" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 const CHART_RANGES: { id: SpendingRange; label: string }[] = [
   { id: '1w', label: '1W' },
@@ -97,6 +115,7 @@ export function GroupDetailPage() {
   const [historyCycle, setHistoryCycle] = useState<number | null>(null)
   const { data: cycleExpenses, isLoading: cycleExpensesLoading } = useCycleExpenses(groupId, historyCycle ?? undefined)
   const [chartRange, setChartRange] = useState<SpendingRange>('mtd')
+  const [showChart, setShowChart] = useState(false)
 
   const nameFor = (id: string) => group?.members.find((m) => m.user_id === id)?.name ?? 'Someone'
 
@@ -165,7 +184,29 @@ export function GroupDetailPage() {
   }
 
   if (groupLoading || !group) {
-    return <p className="flex-1 px-4 py-8 text-center text-sm text-[var(--color-ink-muted)]">Loading…</p>
+    return (
+      <div className="flex h-full flex-col overflow-hidden px-4 pt-6">
+        <div className="flex items-center gap-3 pb-4">
+          <ArrowLeft size={20} strokeWidth={2.25} className="text-[var(--color-ink-muted)]" />
+          <Skeleton className="h-11 w-11 shrink-0 !rounded-full" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <Skeleton className="h-4.5 w-32" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        </div>
+        <Skeleton className="mb-4 h-24 w-full !rounded-2xl" />
+        <div className="mb-4 flex gap-2">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-8 w-20 !rounded-full" />
+          ))}
+        </div>
+        <div className="flex gap-4 border-b border-[var(--color-line)] pb-2">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-4 w-14" />
+          ))}
+        </div>
+      </div>
+    )
   }
 
   const TABS: { id: Tab; label: string }[] = [
@@ -286,59 +327,86 @@ export function GroupDetailPage() {
       )}
 
       <div className="mb-4">
-        <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setShowChart((v) => !v)}
+          aria-expanded={showChart}
+          className="flex w-full items-center justify-between"
+        >
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
             Spending
           </p>
-          <div className="flex gap-1 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] p-0.5">
-            {CHART_RANGES.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => setChartRange(r.id)}
-                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
-                  chartRange === r.id ? 'bg-[var(--color-ledger)] text-white' : 'text-[var(--color-ink-muted)]'
-                }`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-        </div>
+          <ChevronDown
+            size={16}
+            strokeWidth={2.5}
+            className={`text-[var(--color-ink-muted)] transition-transform ${showChart ? 'rotate-180' : ''}`}
+          />
+        </button>
 
-        {chartBreakdown.byCategory.length > 0 ? (
-          <div className="mt-2 flex items-center gap-4 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)]">
-            <DonutChart
-              segments={chartBreakdown.byCategory.map((c) => ({
-                value: c.total,
-                color: categoryById(c.category).color,
-              }))}
-              centerValue={formatCurrency(chartBreakdown.total)}
-              centerLabel="Group spending"
-            />
-            <div className="min-w-0 flex-1 space-y-1.5">
-              {chartBreakdown.byCategory.map((c) => {
-                const cat = categoryById(c.category)
-                return (
-                  <div key={c.category} className="flex items-center justify-between gap-2 text-xs">
-                    <span className="flex min-w-0 items-center gap-1.5 truncate text-[var(--color-ink)]">
-                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: cat.color }} />
-                      <span className="truncate">
-                        {cat.emoji} {cat.label}
-                      </span>
-                    </span>
-                    <span className="font-mono-nums shrink-0 text-[var(--color-ink-muted)]">
-                      {formatCurrency(c.total)}
-                    </span>
-                  </div>
-                )
-              })}
+        {showChart && (
+          <div className="animate-rise mt-2">
+            <div className="mb-2 flex justify-end gap-1 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] p-0.5">
+              {CHART_RANGES.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setChartRange(r.id)}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                    chartRange === r.id ? 'bg-[var(--color-ledger)] text-white' : 'text-[var(--color-ink-muted)]'
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
             </div>
+
+            {expensesLoading ? (
+              <div className="flex items-center gap-4 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)]">
+                <Skeleton className="h-32 w-32 shrink-0 !rounded-full" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <Skeleton key={i} className="h-3.5 w-full" />
+                  ))}
+                </div>
+              </div>
+            ) : chartBreakdown.byCategory.length > 0 ? (
+              <div className="flex items-center gap-4 rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)]">
+                <DonutChart
+                  segments={chartBreakdown.byCategory.map((c) => ({
+                    value: c.total,
+                    color: categoryById(c.category).color,
+                  }))}
+                  centerValue={formatCurrency(chartBreakdown.total)}
+                  centerLabel="Group spending"
+                />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  {chartBreakdown.byCategory.map((c) => {
+                    const cat = categoryById(c.category)
+                    return (
+                      <div key={c.category} className="flex items-center justify-between gap-2 text-xs">
+                        <span className="flex min-w-0 items-center gap-1.5 truncate text-[var(--color-ink)]">
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: cat.color }}
+                          />
+                          <span className="truncate">
+                            {cat.emoji} {cat.label}
+                          </span>
+                        </span>
+                        <span className="font-mono-nums shrink-0 text-[var(--color-ink-muted)]">
+                          {formatCurrency(c.total)}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : (
+              <p className="rounded-2xl border border-dashed border-[var(--color-line)] p-4 text-center text-sm text-[var(--color-ink-muted)]">
+                No spending in this period.
+              </p>
+            )}
           </div>
-        ) : (
-          <p className="mt-2 rounded-2xl border border-dashed border-[var(--color-line)] p-4 text-center text-sm text-[var(--color-ink-muted)]">
-            No spending in this period.
-          </p>
         )}
 
         <p className="mt-2 text-center text-xs text-[var(--color-ink-muted)]">
@@ -446,7 +514,7 @@ export function GroupDetailPage() {
       )}
       {tab === 'expenses' &&
         (expensesLoading ? (
-          <p className="text-sm text-[var(--color-ink-muted)]">Loading…</p>
+          <ExpenseRowsSkeleton />
         ) : !expenses || expenses.length === 0 ? (
           <p className="text-sm text-[var(--color-ink-muted)]">No expenses yet.</p>
         ) : (
@@ -618,7 +686,7 @@ export function GroupDetailPage() {
               <ArrowLeft size={13} strokeWidth={2.25} /> Back to History
             </button>
             {cycleExpensesLoading ? (
-              <p className="text-sm text-[var(--color-ink-muted)]">Loading…</p>
+              <ExpenseRowsSkeleton />
             ) : !cycleExpenses || cycleExpenses.length === 0 ? (
               <p className="text-sm text-[var(--color-ink-muted)]">No expenses in this cycle.</p>
             ) : (

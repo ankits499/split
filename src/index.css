@@ -177,4 +177,7 @@ textarea {
   .animate-rise {
     animation: none;
   }
+  .animate-pulse {
+    animation: none;
+  }
 }

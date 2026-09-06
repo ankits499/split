@@ -5,6 +5,7 @@ import { useFriendsSummary, useSettleWithFriend } from '../features/friends/hook
 import { Avatar } from '../components/Avatar'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { formatCurrency } from '../utils/money'
+import { Skeleton } from '../components/ui/Skeleton'
 
 export function FriendDetailPage() {
   const { friendId } = useParams<{ friendId: string }>()
@@ -15,7 +16,32 @@ export function FriendDetailPage() {
 
   const friend = friends?.find((f) => f.friendId === friendId)
 
-  if (isLoading || !friend) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col overflow-hidden">
+        <div className="shrink-0 flex items-center gap-3 px-4 pt-6 pb-4">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            aria-label="Back"
+            className="text-[var(--color-ink-muted)]"
+          >
+            <ArrowLeft size={20} strokeWidth={2.25} />
+          </button>
+          <Skeleton className="h-11 w-11 shrink-0 !rounded-full" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        </div>
+        <div className="px-4">
+          <Skeleton className="h-24 w-full !rounded-2xl" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!friend) {
     return (
       <div className="flex flex-col overflow-hidden">
         <div className="shrink-0 flex items-center gap-3 px-4 pt-6 pb-4">
@@ -29,7 +55,7 @@ export function FriendDetailPage() {
           </button>
         </div>
         <p className="px-4 text-center text-sm text-[var(--color-ink-muted)]">
-          {isLoading ? 'Loading…' : "You're all settled up with this person."}
+          You're all settled up with this person.
         </p>
       </div>
     )
