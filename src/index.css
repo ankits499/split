@@ -110,8 +110,10 @@ textarea {
   flex-direction: column;
   background: var(--color-bg);
   /* Status bar is translucent (index.html) so this background shows through
-     it; reserve the inset so page content isn't drawn under the notch/clock. */
-  padding-top: env(safe-area-inset-top);
+     it; reserve the inset so page content isn't drawn under the notch/clock.
+     Every page header already adds its own pt-6, so trim that much off the
+     inset here rather than stacking both in full. */
+  padding-top: max(0px, calc(env(safe-area-inset-top) - 0.75rem));
 }
 
 /* Each page owns its own scroll region (its header stays fixed while its
