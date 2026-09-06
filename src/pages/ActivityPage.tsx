@@ -40,7 +40,7 @@ export function ActivityPage() {
     <div className="flex flex-col overflow-hidden">
       <h1 className="shrink-0 px-4 pt-6 pb-4 text-lg font-semibold text-[var(--color-ink)]">Activity</h1>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <div className="flex-1 overflow-y-auto px-4 pb-6">
       {isLoading ? (
         <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
           {[0, 1, 2, 3].map((i) => (

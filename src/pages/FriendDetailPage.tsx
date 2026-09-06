@@ -83,7 +83,7 @@ export function FriendDetailPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <div className="flex-1 overflow-y-auto px-4 pb-6">
         <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-5 text-center shadow-[var(--shadow-card)]">
           {settled ? (
             <p className="text-sm text-[var(--color-ink-muted)]">You're all settled up</p>

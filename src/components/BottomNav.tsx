@@ -48,42 +48,6 @@ export function BottomNav() {
 
   return (
     <>
-      {showQuickAdd && (
-        <>
-          <button
-            className="fixed inset-0 z-30 cursor-default bg-black/40"
-            aria-label="Close quick actions"
-            onClick={() => setShowQuickAdd(false)}
-          />
-          <div className="animate-rise fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-1/2 z-40 w-[calc(100%-2rem)] max-w-[400px] -translate-x-1/2 overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] shadow-lg">
-            <button
-              onClick={() => {
-                setShowQuickAdd(false)
-                setShowExpenseSheet(true)
-              }}
-              className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-bg)]"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
-                <Receipt size={17} strokeWidth={2.25} />
-              </span>
-              New expense
-            </button>
-            <button
-              onClick={() => {
-                setShowQuickAdd(false)
-                navigate('/groups/new')
-              }}
-              className="flex w-full items-center gap-3 border-t border-[var(--color-line)] px-4 py-3.5 text-left text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-bg)]"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
-                <UsersRound size={17} strokeWidth={2.25} />
-              </span>
-              New group
-            </button>
-          </div>
-        </>
-      )}
-
       {showExpenseSheet && (
         <ExpenseSheet
           groupId={currentGroup?.id}
@@ -93,13 +57,52 @@ export function BottomNav() {
         />
       )}
 
+      {/* A normal flex child at the end of #root's column (see index.css),
+          not position:fixed — it sits wherever layout puts it, so it can't
+          drift from the true screen edge the way a viewport-anchored fixed
+          element can on iOS (Safari/PWA chrome resize quirks). Every page's
+          own scroll area just needs its usual bottom breathing room now,
+          not a calc() reserving space for an overlay. */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-10 flex items-center border-t border-[var(--color-line)] bg-[var(--color-surface)]"
-        // The full home-indicator inset below an already-padded row leaves a
-        // blank slab under the icons; trim most of it so the bar reads as one
-        // piece, with a floor so devices reporting 0 still get real padding.
-        style={{ paddingBottom: 'max(0.5rem, calc(env(safe-area-inset-bottom) - 1.5rem))' }}
+        className="relative shrink-0 flex items-center border-t border-[var(--color-line)] bg-[var(--color-surface)]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
+        {showQuickAdd && (
+          <>
+            <button
+              className="fixed inset-0 z-30 cursor-default bg-black/40"
+              aria-label="Close quick actions"
+              onClick={() => setShowQuickAdd(false)}
+            />
+            <div className="animate-rise absolute bottom-full left-1/2 z-40 mb-2 w-[calc(100%-2rem)] max-w-[400px] -translate-x-1/2 overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] shadow-lg">
+              <button
+                onClick={() => {
+                  setShowQuickAdd(false)
+                  setShowExpenseSheet(true)
+                }}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-bg)]"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
+                  <Receipt size={17} strokeWidth={2.25} />
+                </span>
+                New expense
+              </button>
+              <button
+                onClick={() => {
+                  setShowQuickAdd(false)
+                  navigate('/groups/new')
+                }}
+                className="flex w-full items-center gap-3 border-t border-[var(--color-line)] px-4 py-3.5 text-left text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-bg)]"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
+                  <UsersRound size={17} strokeWidth={2.25} />
+                </span>
+                New group
+              </button>
+            </div>
+          </>
+        )}
+
         {SIDE_ITEMS_LEFT.map((item) => (
           <NavItem key={item.to} {...item} />
         ))}

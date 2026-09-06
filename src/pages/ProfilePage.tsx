@@ -49,7 +49,7 @@ export function ProfilePage() {
     <div className="flex flex-col overflow-hidden">
       <h1 className="shrink-0 px-4 pt-6 pb-4 text-lg font-semibold text-[var(--color-ink)]">Profile</h1>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <div className="flex-1 overflow-y-auto px-4 pb-6">
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
           Spending

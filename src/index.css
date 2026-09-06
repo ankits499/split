@@ -123,6 +123,13 @@ textarea {
   flex: 1;
 }
 
+/* BottomNav is a normal flex item here (not position:fixed, see its own
+   comment), so it needs its natural height instead of stretching to fill
+   the column like every other #root child. */
+#root > nav {
+  flex: none;
+}
+
 @media (min-width: 900px) {
   #root {
     max-width: 100%;
