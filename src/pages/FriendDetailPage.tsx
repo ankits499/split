@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { useFriendsSummary, useSettleWithFriend } from '../features/friends/hooks'
 import { Avatar } from '../components/Avatar'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { useToast } from '../features/toast'
 import { formatCurrency } from '../utils/money'
 import { Skeleton } from '../components/ui/Skeleton'
 
@@ -12,6 +13,7 @@ export function FriendDetailPage() {
   const navigate = useNavigate()
   const { data: friends, isLoading } = useFriendsSummary()
   const settleWithFriend = useSettleWithFriend()
+  const showToast = useToast()
   const [confirmSettle, setConfirmSettle] = useState(false)
 
   const friend = friends?.find((f) => f.friendId === friendId)
@@ -54,9 +56,12 @@ export function FriendDetailPage() {
             <ArrowLeft size={20} strokeWidth={2.25} />
           </button>
         </div>
-        <p className="px-4 text-center text-sm text-[var(--color-ink-muted)]">
-          You're all settled up with this person.
-        </p>
+        <div className="flex flex-col items-center px-4 py-6 text-center">
+          <span className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
+            <Check size={20} strokeWidth={2.5} />
+          </span>
+          <p className="text-sm text-[var(--color-ink-muted)]">You're all settled up with this person.</p>
+        </div>
       </div>
     )
   }
@@ -149,7 +154,12 @@ export function FriendDetailPage() {
           setConfirmSettle(false)
           settleWithFriend.mutate(
             { friendId: friend.friendId, groups: friend.groups },
-            { onSuccess: () => navigate('/groups') }
+            {
+              onSuccess: () => {
+                showToast(`Settled up with ${friend.friendName}`)
+                navigate('/groups')
+              },
+            }
           )
         }}
         onCancel={() => setConfirmSettle(false)}

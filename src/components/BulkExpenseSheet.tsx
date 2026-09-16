@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
 import type { GroupMember } from '../features/groups/hooks'
 import { useAddExpense } from '../features/expenses/hooks'
+import { useToast } from '../features/toast'
 import { splitEqually, toIsoDate, formatCurrency, firstName, evalAmount } from '../utils/money'
 import { CATEGORIES } from '../utils/categories'
 import { guessCategory } from '../utils/categoryGuess'
@@ -55,6 +56,7 @@ export function BulkExpenseSheet({
   onClose: () => void
 }) {
   const addExpense = useAddExpense(groupId)
+  const showToast = useToast()
   const today = toIsoDate(new Date())
   const [rows, setRows] = useState<Row[]>(() => Array.from({ length: 4 }, () => blankRow(currentUserId)))
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
@@ -137,6 +139,7 @@ export function BulkExpenseSheet({
         return
       }
     }
+    showToast(`${valid.length} ${valid.length === 1 ? 'expense' : 'expenses'} added`)
     onClose()
   }
 

@@ -4,6 +4,7 @@ import type { Expense, Split } from '../features/expenses/hooks'
 import type { GroupMember } from '../features/groups/hooks'
 import { useGroups } from '../features/groups/hooks'
 import { useAddExpense, useUpdateExpense, useExpenseEditHistory } from '../features/expenses/hooks'
+import { useToast } from '../features/toast'
 import { splitEqually, splitByPercentage, formatCurrency, toIsoDate, firstName, evalAmount } from '../utils/money'
 import { CATEGORIES, categoryById } from '../utils/categories'
 import { guessCategory } from '../utils/categoryGuess'
@@ -74,6 +75,7 @@ export function ExpenseSheet({
 
   const addExpense = useAddExpense(groupId)
   const updateExpense = useUpdateExpense(groupId)
+  const showToast = useToast()
   const [description, setDescription] = useState(expense?.description ?? '')
   const [amount, setAmount] = useState(expense ? String(expense.amount) : '')
   const [date, setDate] = useState(expense?.expense_date ?? toIsoDate(new Date()))
@@ -247,8 +249,10 @@ export function ExpenseSheet({
       }
       if (expense) {
         await updateExpense.mutateAsync({ id: expense.id, ...payload, original: expense })
+        showToast('Expense updated')
       } else {
         await addExpense.mutateAsync(payload)
+        showToast('Expense added')
       }
       onClose()
     } catch (err) {

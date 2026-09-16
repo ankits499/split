@@ -6,6 +6,7 @@ import './index.css'
 import { queryClient } from './lib/queryClient'
 import { ThemeProvider } from './features/theme'
 import { AuthProvider } from './features/auth/AuthProvider'
+import { ToastProvider } from './features/toast'
 import { router } from './router'
 
 // The service worker precaches the whole app shell and takes over
@@ -25,7 +26,9 @@ createRoot(document.getElementById('root')!).render(
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <RouterProvider router={router} />
+          <ToastProvider>
+            <RouterProvider router={router} />
+          </ToastProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

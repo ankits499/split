@@ -47,6 +47,7 @@ import { CategoryIcon } from '../components/CategoryIcon'
 import { DonutChart } from '../components/DonutChart'
 import { EmptyState } from '../components/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
+import { useToast } from '../features/toast'
 
 type Tab = 'expenses' | 'balances' | 'settlements' | 'history'
 
@@ -92,6 +93,7 @@ export function GroupDetailPage() {
   const { data: cycleSummaries } = useGroupCycleSummaries(groupId, group?.cycle_number)
   const deleteExpense = useDeleteExpense(groupId!)
   const addSettlement = useAddSettlement(groupId!)
+  const showToast = useToast()
   const addMember = useAddMember(groupId!)
   const removeMember = useRemoveMember(groupId!)
   const renameGroup = useRenameGroup(groupId!)
@@ -117,6 +119,7 @@ export function GroupDetailPage() {
   const [visibleSettlementCount, setVisibleSettlementCount] = useState(PAGE_SIZE)
   const [historyCycle, setHistoryCycle] = useState<number | null>(null)
   const { data: cycleExpenses, isLoading: cycleExpensesLoading } = useCycleExpenses(groupId, historyCycle ?? undefined)
+  const { data: cycleSettlements } = useSettlements(groupId, historyCycle ?? undefined)
   const [chartRange, setChartRange] = useState<SpendingRange>('mtd')
   const [showChart, setShowChart] = useState(false)
 
@@ -715,11 +718,38 @@ export function GroupDetailPage() {
                 ))}
               </div>
             )}
+
+            {cycleSettlements && cycleSettlements.length > 0 && (
+              <>
+                <p className="mb-2 mt-5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
+                  Settled up
+                </p>
+                <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
+                  {cycleSettlements.map((s) => (
+                    <div key={s.id} className="flex items-center gap-3 p-3">
+                      <Avatar name={nameFor(s.from_user)} size="md" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-[var(--color-ink)]">
+                          {firstName(nameFor(s.from_user))} paid {firstName(nameFor(s.to_user))}
+                        </p>
+                        <p className="text-xs text-[var(--color-ink-muted)]">
+                          {new Date(s.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="font-mono-nums shrink-0 text-sm font-semibold text-[var(--color-ink)]">
+                        {formatCurrency(s.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         ) : !cycleSummaries || cycleSummaries.length === 0 ? (
-          <p className="text-sm text-[var(--color-ink-muted)]">
-            No settled cycles yet. Past expenses land here once a group is fully settled up.
-          </p>
+          <EmptyState
+            icon={ArrowLeftRight}
+            message="No settled cycles yet. Past expenses land here once a group is fully settled up."
+          />
         ) : (
           <div className="space-y-2">
             {cycleSummaries.map((c) => (
@@ -775,7 +805,10 @@ export function GroupDetailPage() {
         confirmLabel="Mark as settled"
         onConfirm={() => {
           if (settleTarget) {
-            addSettlement.mutate({ fromUser: settleTarget.from, toUser: settleTarget.to, amount: settleTarget.amount })
+            addSettlement.mutate(
+              { fromUser: settleTarget.from, toUser: settleTarget.to, amount: settleTarget.amount },
+              { onSuccess: () => showToast('Settled up') }
+            )
           }
           setSettleTarget(null)
         }}
