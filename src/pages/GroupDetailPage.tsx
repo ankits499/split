@@ -12,8 +12,8 @@ import {
   MoreVertical,
   Check,
   X,
-  Plus,
   ChevronDown,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
 import {
@@ -282,7 +282,16 @@ export function GroupDetailPage() {
                   aria-label="Close menu"
                   onClick={() => setShowGroupMenu(false)}
                 />
-                <div className="animate-rise absolute right-0 z-30 mt-1 w-44 overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] py-1 shadow-lg">
+                <div className="animate-rise absolute right-0 z-30 mt-1 w-48 overflow-hidden rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] py-1 shadow-lg">
+                  <button
+                    onClick={() => {
+                      setShowGroupMenu(false)
+                      setShowBulk(true)
+                    }}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[var(--color-ink)] hover:bg-[var(--color-bg)]"
+                  >
+                    <FileSpreadsheet size={14} strokeWidth={2.25} /> Bulk add expenses
+                  </button>
                   <button
                     onClick={() => {
                       setNameDraft(group.name)
@@ -503,15 +512,6 @@ export function GroupDetailPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-6">
-      {tab === 'expenses' && (
-        <button
-          type="button"
-          onClick={() => setShowBulk(true)}
-          className="mb-3 hidden items-center gap-1.5 rounded-lg border border-[var(--color-line)] px-3 py-1.5 text-sm font-medium text-[var(--color-ink)] sm:inline-flex"
-        >
-          <Plus size={15} strokeWidth={2.5} /> Bulk add
-        </button>
-      )}
       {tab === 'expenses' &&
         (expensesLoading ? (
           <ExpenseRowsSkeleton />
