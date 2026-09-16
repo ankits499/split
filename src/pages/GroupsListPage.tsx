@@ -5,6 +5,7 @@ import { useGroups } from '../features/groups/hooks'
 import { useFriendsSummary } from '../features/friends/hooks'
 import { GroupCardContainer } from '../components/GroupCardContainer'
 import { Avatar } from '../components/Avatar'
+import { EmptyState } from '../components/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
 import { formatCurrency } from '../utils/money'
 
@@ -62,16 +63,7 @@ export function GroupsListPage() {
           groupsLoading ? (
             <ListSkeleton />
           ) : !groups || groups.length === 0 ? (
-            <div className="flex flex-col items-center rounded-2xl border border-dashed border-[var(--color-line)] p-8 text-center">
-              <Users size={28} strokeWidth={1.75} className="mb-2 text-[var(--color-ink-muted)]" />
-              <p className="text-sm text-[var(--color-ink-muted)]">No groups yet.</p>
-              <Link
-                to="/groups/new"
-                className="mt-4 inline-block rounded-xl bg-[var(--color-ledger)] px-4 py-2 text-sm font-semibold text-white"
-              >
-                Create a group
-              </Link>
-            </div>
+            <EmptyState icon={Users} message="No groups yet." action={{ label: 'Create a group', to: '/groups/new' }} />
           ) : (
             <div className="space-y-3">
               {groups.map((g) => (
@@ -82,10 +74,7 @@ export function GroupsListPage() {
         ) : friendsLoading ? (
           <ListSkeleton />
         ) : !friends || friends.length === 0 ? (
-          <div className="flex flex-col items-center rounded-2xl border border-dashed border-[var(--color-line)] p-8 text-center">
-            <UsersRound size={28} strokeWidth={1.75} className="mb-2 text-[var(--color-ink-muted)]" />
-            <p className="text-sm text-[var(--color-ink-muted)]">No balances with friends yet.</p>
-          </div>
+          <EmptyState icon={UsersRound} message="No balances with friends yet." />
         ) : (
           <div className="space-y-3">
             {friends.map((f) => (

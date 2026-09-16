@@ -11,6 +11,7 @@ import type { GroupSummary } from '../features/groups/hooks'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { InstallPrompt } from '../components/InstallPrompt'
 import { OnlineIndicator } from '../components/OnlineIndicator'
+import { EmptyState } from '../components/EmptyState'
 import { formatCurrency, firstName } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
 import { Skeleton } from '../components/ui/Skeleton'
@@ -118,18 +119,11 @@ export function HomePage() {
             </div>
           </div>
         ) : !groups || groups.length === 0 ? (
-          <div className="flex flex-col items-center rounded-2xl border border-dashed border-[var(--color-line)] p-8 text-center">
-            <Receipt size={28} strokeWidth={1.75} className="mb-2 text-[var(--color-ink-muted)]" />
-            <p className="text-sm text-[var(--color-ink-muted)]">
-              No groups yet. Create one to start splitting expenses.
-            </p>
-            <Link
-              to="/groups/new"
-              className="mt-4 inline-block rounded-xl bg-[var(--color-ledger)] px-4 py-2 text-sm font-semibold text-white"
-            >
-              Create a group
-            </Link>
-          </div>
+          <EmptyState
+            icon={Receipt}
+            message="No groups yet. Create one to start splitting expenses."
+            action={{ label: 'Create a group', to: '/groups/new' }}
+          />
         ) : (
           <>
             <p className="text-sm text-[var(--color-ink-muted)]">

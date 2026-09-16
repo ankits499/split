@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowLeftRight,
+  Receipt,
   Trash2,
   UserPlus,
   UserMinus,
@@ -43,6 +45,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog'
 import { Avatar } from '../components/Avatar'
 import { CategoryIcon } from '../components/CategoryIcon'
 import { DonutChart } from '../components/DonutChart'
+import { EmptyState } from '../components/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
 
 type Tab = 'expenses' | 'balances' | 'settlements' | 'history'
@@ -516,7 +519,7 @@ export function GroupDetailPage() {
         (expensesLoading ? (
           <ExpenseRowsSkeleton />
         ) : !expenses || expenses.length === 0 ? (
-          <p className="text-sm text-[var(--color-ink-muted)]">No expenses yet.</p>
+          <EmptyState icon={Receipt} message="No expenses yet." />
         ) : (
           <div>
             <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
@@ -603,7 +606,12 @@ export function GroupDetailPage() {
 
       {tab === 'balances' &&
         (transfers.length === 0 ? (
-          <p className="text-sm text-[var(--color-ink-muted)]">Everyone's settled up.</p>
+          <div className="flex flex-col items-center py-6 text-center">
+            <span className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-ledger-soft)] text-[var(--color-ledger)]">
+              <Check size={20} strokeWidth={2.5} />
+            </span>
+            <p className="text-sm text-[var(--color-ink-muted)]">Everyone's settled up.</p>
+          </div>
         ) : (
           <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
             {transfers.map((t, i) => {
@@ -641,7 +649,7 @@ export function GroupDetailPage() {
 
       {tab === 'settlements' &&
         (!settlements || settlements.length === 0 ? (
-          <p className="text-sm text-[var(--color-ink-muted)]">No settlements recorded yet.</p>
+          <EmptyState icon={ArrowLeftRight} message="No settlements recorded yet." />
         ) : (
           <div>
             <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
@@ -688,7 +696,7 @@ export function GroupDetailPage() {
             {cycleExpensesLoading ? (
               <ExpenseRowsSkeleton />
             ) : !cycleExpenses || cycleExpenses.length === 0 ? (
-              <p className="text-sm text-[var(--color-ink-muted)]">No expenses in this cycle.</p>
+              <EmptyState icon={Receipt} message="No expenses in this cycle." />
             ) : (
               <div className="receipt-edge divide-y divide-dashed divide-[var(--color-line)] overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] pb-3 shadow-[var(--shadow-card)]">
                 {cycleExpenses.map((e) => (

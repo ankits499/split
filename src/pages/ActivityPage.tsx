@@ -3,6 +3,7 @@ import { ArrowLeftRight, Receipt } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
 import { useActivityFeed, type ActivityEntry } from '../features/dashboard/hooks'
 import { CategoryIcon } from '../components/CategoryIcon'
+import { EmptyState } from '../components/EmptyState'
 import { formatCurrency, firstName } from '../utils/money'
 import { myExpenseDelta } from '../utils/balances'
 import { categoryById } from '../utils/categories'
@@ -54,10 +55,7 @@ export function ActivityPage() {
           ))}
         </div>
       ) : sections.length === 0 ? (
-        <div className="flex flex-col items-center rounded-2xl border border-dashed border-[var(--color-line)] p-8 text-center">
-          <Receipt size={28} strokeWidth={1.75} className="mb-2 text-[var(--color-ink-muted)]" />
-          <p className="text-sm text-[var(--color-ink-muted)]">No activity yet.</p>
-        </div>
+        <EmptyState icon={Receipt} message="No activity yet." />
       ) : (
         <div className="space-y-5">
           {sections.map(([label, entries]) => (
