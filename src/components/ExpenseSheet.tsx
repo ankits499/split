@@ -95,6 +95,25 @@ export function ExpenseSheet({
   const [showHistory, setShowHistory] = useState(false)
   const { data: editHistory } = useExpenseEditHistory(expense?.id, isEditing && showHistory)
 
+  // Whether the scrollable body has more content below the fold — drives the
+  // fade hint above the pinned footer, so it only shows when there's
+  // actually something to scroll to.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollDown, setCanScrollDown] = useState(false)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const update = () => setCanScrollDown(el.scrollHeight - el.scrollTop - el.clientHeight > 4)
+    update()
+    el.addEventListener('scroll', update)
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener('scroll', update)
+      ro.disconnect()
+    }
+  }, [])
+
   useEffect(() => {
     if (needsGroupPicker) {
       setIncluded(new Set(members.map((m) => m.user_id)))
@@ -242,17 +261,19 @@ export function ExpenseSheet({
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={submit}
-        className="animate-rise max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-t-3xl bg-[var(--color-surface)] p-5"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
+        className="animate-rise flex max-h-[90vh] w-full max-w-[480px] flex-col overflow-hidden rounded-t-3xl bg-[var(--color-surface)]"
       >
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--color-line)]" />
-        <div className="mb-4 flex items-center justify-center gap-2">
-          <Receipt size={18} className="text-[var(--color-ledger)]" strokeWidth={2.25} />
-          <h2 className="text-base font-semibold text-[var(--color-ink)]">
-            {isEditing ? 'Edit line item' : 'New line item'}
-          </h2>
+        <div className="shrink-0 px-5 pt-5">
+          <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--color-line)]" />
+          <div className="mb-4 flex items-center justify-center gap-2">
+            <Receipt size={18} className="text-[var(--color-ledger)]" strokeWidth={2.25} />
+            <h2 className="text-base font-semibold text-[var(--color-ink)]">
+              {isEditing ? 'Edit line item' : 'New line item'}
+            </h2>
+          </div>
         </div>
 
+        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">
         {needsGroupPicker && (
           <div className="mb-3">
             <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
@@ -501,27 +522,38 @@ export function ExpenseSheet({
             <X size={14} strokeWidth={2.5} /> {error}
           </p>
         )}
+        </div>
 
-        <button
-          type="submit"
-          disabled={addExpense.isPending || updateExpense.isPending || !groupId}
-          className="w-full rounded-xl bg-[var(--color-ledger)] py-3 font-semibold text-white disabled:opacity-50"
-        >
-          {isEditing
-            ? updateExpense.isPending
-              ? 'Saving…'
-              : 'Save changes'
-            : addExpense.isPending
-              ? 'Adding…'
-              : 'Add expense'}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-2 w-full py-2 text-sm font-medium text-[var(--color-ink-muted)]"
-        >
-          Cancel
-        </button>
+        <div className="relative shrink-0">
+          {canScrollDown && (
+            <div className="pointer-events-none absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-[var(--color-surface)] to-transparent" />
+          )}
+          <div
+            className="shrink-0 border-t border-[var(--color-line)] bg-[var(--color-surface)] px-5 pt-3 shadow-[0_-8px_16px_-8px_rgba(0,0,0,0.25)]"
+            style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
+          >
+            <button
+              type="submit"
+              disabled={addExpense.isPending || updateExpense.isPending || !groupId}
+              className="w-full rounded-xl bg-[var(--color-ledger)] py-3 font-semibold text-white disabled:opacity-50"
+            >
+              {isEditing
+                ? updateExpense.isPending
+                  ? 'Saving…'
+                  : 'Save changes'
+                : addExpense.isPending
+                  ? 'Adding…'
+                  : 'Add expense'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-2 w-full py-2 text-sm font-medium text-[var(--color-ink-muted)]"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   )
