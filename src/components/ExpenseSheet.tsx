@@ -529,7 +529,7 @@ export function ExpenseSheet({
             <div className="pointer-events-none absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-[var(--color-surface)] to-transparent" />
           )}
           <div
-            className="shrink-0 border-t border-[var(--color-line)] bg-[var(--color-surface)] px-5 pt-3 shadow-[0_-8px_16px_-8px_rgba(0,0,0,0.25)]"
+            className="shrink-0 border-t border-[var(--color-line)] bg-[var(--color-surface)] px-5 pt-3 shadow-[0_-4px_6px_-2px_rgba(0,0,0,0.2),0_-16px_28px_-6px_rgba(0,0,0,0.35)]"
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
           >
             <button

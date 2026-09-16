@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useMatch, useNavigate } from 'react-router-dom'
+import { NavLink, matchPath, useLocation, useMatch, useNavigate } from 'react-router-dom'
 import { House, Users, Clock, CircleUser, Plus, Receipt, UsersRound } from 'lucide-react'
 import { useLocalUser } from '../features/localUser'
 import { useGroup } from '../features/groups/hooks'
@@ -15,10 +15,10 @@ const SIDE_ITEMS_RIGHT = [
 ]
 
 const itemClass = ({ isActive }: { isActive: boolean }) =>
-  `flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.5rem] px-2 py-1.5 text-[10px] font-medium transition-all duration-200 ${
+  `relative z-10 flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.5rem] px-2 py-1.5 text-[10px] transition-colors duration-200 ${
     isActive
-      ? 'bottom-nav-item-active text-[var(--color-ledger)]'
-      : 'text-[var(--color-ink-muted)] hover:bg-white/15 hover:text-[var(--color-ink)] dark:hover:bg-white/[0.05]'
+      ? 'font-semibold text-[var(--color-ledger)]'
+      : 'font-medium text-[var(--color-ink-muted)] hover:bg-white/15 hover:text-[var(--color-ink)] dark:hover:bg-white/[0.05]'
   }`
 
 function NavItem({ to, label, Icon, end }: { to: string; label: string; Icon: typeof House; end: boolean }) {
@@ -27,6 +27,29 @@ function NavItem({ to, label, Icon, end }: { to: string; label: string; Icon: ty
       <Icon size={19} strokeWidth={2} />
       {label}
     </NavLink>
+  )
+}
+
+/** Two nav items sharing one capsule that glides to whichever is active —
+ *  the iOS "Liquid Glass" tab-bar signature, done with a CSS transform so it
+ *  stays in sync with layout at any width with no measuring. */
+function NavPair({ items }: { items: typeof SIDE_ITEMS_LEFT }) {
+  const { pathname } = useLocation()
+  const activeIndex = items.findIndex((item) => matchPath({ path: item.to, end: item.end }, pathname))
+
+  return (
+    <div className="relative flex flex-[2] gap-1">
+      {activeIndex >= 0 && (
+        <div
+          aria-hidden
+          className="bottom-nav-active-pill absolute inset-y-0 w-1/2 rounded-[1.5rem] transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(${activeIndex * 100}%)` }}
+        />
+      )}
+      {items.map((item) => (
+        <NavItem key={item.to} {...item} />
+      ))}
+    </div>
   )
 }
 
@@ -102,24 +125,20 @@ export function BottomNav() {
           </div>
         )}
 
-        {SIDE_ITEMS_LEFT.map((item) => (
-          <NavItem key={item.to} {...item} />
-        ))}
+        <NavPair items={SIDE_ITEMS_LEFT} />
 
         <div className="flex flex-1 justify-center">
           <button
             onClick={handleCenterButton}
             aria-label={currentGroup ? 'Add expense' : 'Quick add'}
             aria-expanded={currentGroup ? undefined : showQuickAdd}
-            className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--color-ledger)] text-white shadow-lg active:opacity-90"
+            className="bottom-nav-fab -mt-7 flex h-15 w-15 items-center justify-center rounded-full bg-[var(--color-ledger)] text-white transition-transform duration-150 active:scale-90"
           >
-            <Plus size={26} strokeWidth={2.25} />
+            <Plus size={27} strokeWidth={2.5} />
           </button>
         </div>
 
-        {SIDE_ITEMS_RIGHT.map((item) => (
-          <NavItem key={item.to} {...item} />
-        ))}
+        <NavPair items={SIDE_ITEMS_RIGHT} />
       </nav>
     </>
   )
