@@ -189,25 +189,19 @@ export function useAddExpense(groupId: string) {
       date: string
       category: string
     }) => {
-      const { data: expense, error } = await supabase
-        .from('expenses')
-        .insert({
-          group_id: groupId,
-          description: input.description,
-          amount: input.amount,
-          paid_by: input.paidBy,
-          created_by: session!.user.id,
-          expense_date: input.date,
-          category: input.category,
-        })
-        .select('id')
-        .single()
+      const { error } = await supabase.rpc('upsert_expense_with_splits', {
+        p_id: null,
+        p_group_id: groupId,
+        p_description: input.description,
+        p_amount: input.amount,
+        p_paid_by: input.paidBy,
+        p_expense_date: input.date,
+        p_category: input.category,
+        p_created_by: session!.user.id,
+        p_edited_by: null,
+        p_splits: input.splits.map((s) => ({ user_id: s.user_id, share: s.share })),
+      })
       if (error) throw error
-
-      const { error: splitErr } = await supabase.from('expense_splits').insert(
-        input.splits.map((s) => ({ expense_id: expense.id, user_id: s.user_id, share: s.share }))
-      )
-      if (splitErr) throw splitErr
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
@@ -231,27 +225,19 @@ export function useUpdateExpense(groupId: string) {
       category: string
       original: Expense
     }) => {
-      const { error } = await supabase
-        .from('expenses')
-        .update({
-          description: input.description,
-          amount: input.amount,
-          paid_by: input.paidBy,
-          expense_date: input.date,
-          category: input.category,
-          edited_at: new Date().toISOString(),
-          edited_by: session!.user.id,
-        })
-        .eq('id', input.id)
+      const { error } = await supabase.rpc('upsert_expense_with_splits', {
+        p_id: input.id,
+        p_group_id: groupId,
+        p_description: input.description,
+        p_amount: input.amount,
+        p_paid_by: input.paidBy,
+        p_expense_date: input.date,
+        p_category: input.category,
+        p_created_by: null,
+        p_edited_by: session!.user.id,
+        p_splits: input.splits.map((s) => ({ user_id: s.user_id, share: s.share })),
+      })
       if (error) throw error
-
-      const { error: delErr } = await supabase.from('expense_splits').delete().eq('expense_id', input.id)
-      if (delErr) throw delErr
-
-      const { error: splitErr } = await supabase.from('expense_splits').insert(
-        input.splits.map((s) => ({ expense_id: input.id, user_id: s.user_id, share: s.share }))
-      )
-      if (splitErr) throw splitErr
 
       const { original } = input
       const changedFields: { field: string; old_value: string; new_value: string }[] = []
