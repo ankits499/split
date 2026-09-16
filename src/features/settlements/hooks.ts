@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
+import { invalidateMoneyQueries } from '../../lib/invalidateMoney'
 
 export interface Settlement {
   id: string
@@ -44,16 +45,9 @@ export function useAddSettlement(groupId: string) {
       })
       if (error) throw error
     },
-    onSuccess: () => {
-      // A settlement can close out the group's cycle (server-side trigger),
-      // so refresh the group (for its possibly-bumped cycle_number) along
-      // with everything scoped to it.
-      queryClient.invalidateQueries({ queryKey: ['settlements', groupId] })
-      queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
-      queryClient.invalidateQueries({ queryKey: ['group', groupId] })
-      queryClient.invalidateQueries({ queryKey: ['groups'] })
-      queryClient.invalidateQueries({ queryKey: ['group-cycles', groupId] })
-      queryClient.invalidateQueries({ queryKey: ['overall-summary'] })
-    },
+    // A settlement can close out the group's cycle (server-side trigger),
+    // so refresh the group (for its possibly-bumped cycle_number) along
+    // with everything else that reads this group's money data.
+    onSuccess: () => invalidateMoneyQueries(queryClient, groupId),
   })
 }

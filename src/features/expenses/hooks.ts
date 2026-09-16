@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
+import { invalidateMoneyQueries } from '../../lib/invalidateMoney'
 
 export interface Split {
   user_id: string
@@ -203,11 +204,7 @@ export function useAddExpense(groupId: string) {
       })
       if (error) throw error
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
-      queryClient.invalidateQueries({ queryKey: ['settlements', groupId] })
-      queryClient.invalidateQueries({ queryKey: ['overall-summary'] })
-    },
+    onSuccess: () => invalidateMoneyQueries(queryClient, groupId),
   })
 }
 
@@ -263,12 +260,7 @@ export function useUpdateExpense(groupId: string) {
         if (editErr) throw editErr
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
-      queryClient.invalidateQueries({ queryKey: ['settlements', groupId] })
-      queryClient.invalidateQueries({ queryKey: ['overall-summary'] })
-      queryClient.invalidateQueries({ queryKey: ['activity-feed'] })
-    },
+    onSuccess: () => invalidateMoneyQueries(queryClient, groupId),
   })
 }
 
@@ -321,11 +313,6 @@ export function useDeleteExpense(groupId: string) {
         .eq('id', expenseId)
       if (error) throw error
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expenses', groupId] })
-      queryClient.invalidateQueries({ queryKey: ['settlements', groupId] })
-      queryClient.invalidateQueries({ queryKey: ['overall-summary'] })
-      queryClient.invalidateQueries({ queryKey: ['activity-feed'] })
-    },
+    onSuccess: () => invalidateMoneyQueries(queryClient, groupId),
   })
 }

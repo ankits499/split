@@ -102,6 +102,8 @@ export function useSettleWithFriend() {
       }
     },
     onSuccess: () => {
+      // Touches multiple groups at once, so invalidate by bare key prefix
+      // (matches every group's query) rather than looping a per-group helper.
       queryClient.invalidateQueries({ queryKey: ['friends-summary'] })
       queryClient.invalidateQueries({ queryKey: ['settlements'] })
       queryClient.invalidateQueries({ queryKey: ['expenses'] })
@@ -109,6 +111,8 @@ export function useSettleWithFriend() {
       queryClient.invalidateQueries({ queryKey: ['groups'] })
       queryClient.invalidateQueries({ queryKey: ['group-cycles'] })
       queryClient.invalidateQueries({ queryKey: ['overall-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['activity-feed'] })
+      queryClient.invalidateQueries({ queryKey: ['spending-history'] })
     },
   })
 }
