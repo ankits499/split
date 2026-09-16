@@ -348,24 +348,21 @@ export function ExpenseSheet({
         <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
           Category
         </p>
-        <div className="mb-4 flex flex-wrap gap-1.5">
-          {CATEGORIES.map((c) => (
-            <button
-              type="button"
-              key={c.id}
-              onClick={() => {
-                categoryTouched.current = true
-                setCategory(c.id)
-              }}
-              className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
-                category === c.id
-                  ? 'border-[var(--color-ledger)] bg-[var(--color-ledger)] text-white'
-                  : 'border-[var(--color-line)] text-[var(--color-ink)]'
-              }`}
-            >
-              {c.emoji} {c.label}
-            </button>
-          ))}
+        <div className="mb-4 w-full overflow-hidden rounded-xl border border-[var(--color-line)] focus-within:border-[var(--color-ledger)]">
+          <select
+            value={category}
+            onChange={(e) => {
+              categoryTouched.current = true
+              setCategory(e.target.value)
+            }}
+            className="block w-full bg-transparent px-4 py-3 text-[var(--color-ink)] outline-none"
+          >
+            {CATEGORIES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.emoji} {c.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-ink-muted)]">
