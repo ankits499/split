@@ -169,6 +169,10 @@ export interface ActivityEntry {
   deletedByName?: string
   amountDiff?: ValueDiff
   categoryDiff?: ValueDiff
+  /** True once the expense's cycle has closed (its group has moved on to a
+   *  later cycle) — it's already reflected in a past settle-up, so its
+   *  per-expense delta is historical, not still owed. */
+  isArchivedCycle?: boolean
 }
 
 const ACTIVITY_PAGE_SIZE = 25
@@ -207,6 +211,7 @@ export function useActivityFeed() {
       if (settlementErr) throw settlementErr
 
       const groupNameById = new Map((groups ?? []).map((g) => [g.id, g.name]))
+      const cycleNumberById = new Map((groups ?? []).map((g) => [g.id, g.cycle_number]))
       const memberNameById = new Map(
         (groups ?? []).flatMap((g) => g.members.map((m) => [m.user_id, m.name] as const))
       )
@@ -261,6 +266,7 @@ export function useActivityFeed() {
             : undefined,
           amountDiff: diffsByExpenseId.get(e.id)?.amount,
           categoryDiff: diffsByExpenseId.get(e.id)?.category,
+          isArchivedCycle: e.cycle < (cycleNumberById.get(e.group_id) ?? e.cycle),
         })),
         ...settlements.map((s) => ({
           kind: 'settlement' as const,

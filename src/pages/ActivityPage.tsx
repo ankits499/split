@@ -93,6 +93,7 @@ export function ActivityPage() {
                               : entry.addedByName
                                 ? ` · Added by ${firstName(entry.addedByName)}`
                                 : ''}
+                          {!entry.isDeleted && entry.isArchivedCycle ? ' · Settled' : ''}
                         </p>
                         {!entry.isDeleted && (entry.amountDiff || entry.categoryDiff) && (
                           <p className="truncate text-xs text-[var(--color-ink-muted)]">
@@ -120,6 +121,16 @@ export function ActivityPage() {
                         (() => {
                           const delta = myExpenseDelta(entry.expense, userId)
                           if (Math.abs(delta) < 0.01) return null
+                          // Already settled up in a past cycle — show the historical
+                          // amount without the "still owed" green/red coloring.
+                          if (entry.isArchivedCycle) {
+                            return (
+                              <span className="font-mono-nums shrink-0 text-sm font-semibold text-[var(--color-ink-muted)]">
+                                {delta > 0 ? '+' : '−'}
+                                {formatCurrency(Math.abs(delta))}
+                              </span>
+                            )
+                          }
                           return (
                             <span
                               className={`font-mono-nums shrink-0 text-sm font-semibold ${
