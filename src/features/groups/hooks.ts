@@ -129,6 +129,24 @@ export function useGroup(groupId: string | undefined) {
   })
 }
 
+/** Manual archive — independent of the 7-day-settled auto-archive check,
+ *  so it works even on a group with an outstanding balance; it only hides
+ *  the group from the everyday list, it doesn't touch who owes what. */
+export function useArchiveGroup() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      const { error } = await supabase.from('groups').update({ archived_at: new Date().toISOString() }).eq('id', groupId)
+      if (error) throw error
+    },
+    onSuccess: (_data, groupId) => {
+      queryClient.invalidateQueries({ queryKey: ['groups'] })
+      queryClient.invalidateQueries({ queryKey: ['groups-archived'] })
+      queryClient.invalidateQueries({ queryKey: ['group', groupId] })
+    },
+  })
+}
+
 export function useUnarchiveGroup() {
   const queryClient = useQueryClient()
   return useMutation({

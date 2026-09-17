@@ -25,6 +25,7 @@ import {
   useGroup,
   useRemoveMember,
   useRenameGroup,
+  useArchiveGroup,
   useUnarchiveGroup,
   type GroupMember,
 } from '../features/groups/hooks'
@@ -100,6 +101,7 @@ export function GroupDetailPage() {
   const removeMember = useRemoveMember(groupId!)
   const renameGroup = useRenameGroup(groupId!)
   const deleteGroup = useDeleteGroup()
+  const archiveGroup = useArchiveGroup()
   const unarchiveGroup = useUnarchiveGroup()
 
   const [tab, setTab] = useState<Tab>(routeState?.tab ?? 'expenses')
@@ -117,6 +119,7 @@ export function GroupDetailPage() {
   const [confirmLeave, setConfirmLeave] = useState(false)
   const [leaveError, setLeaveError] = useState<string | null>(null)
   const [confirmDeleteGroup, setConfirmDeleteGroup] = useState(false)
+  const [confirmArchive, setConfirmArchive] = useState(false)
   const [showGroupMenu, setShowGroupMenu] = useState(false)
   const [visibleExpenseCount, setVisibleExpenseCount] = useState(PAGE_SIZE)
   const [visibleSettlementCount, setVisibleSettlementCount] = useState(PAGE_SIZE)
@@ -311,6 +314,17 @@ export function GroupDetailPage() {
                   >
                     <Pencil size={14} strokeWidth={2.25} /> Rename group
                   </button>
+                  {!group.archived_at && (
+                    <button
+                      onClick={() => {
+                        setShowGroupMenu(false)
+                        setConfirmArchive(true)
+                      }}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[var(--color-ink)] hover:bg-[var(--color-bg)]"
+                    >
+                      <Archive size={14} strokeWidth={2.25} /> Archive group
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setShowGroupMenu(false)
@@ -342,7 +356,7 @@ export function GroupDetailPage() {
         <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface-2)] px-3.5 py-2.5">
           <span className="flex items-center gap-2 text-xs text-[var(--color-ink-muted)]">
             <Archive size={14} strokeWidth={2.25} />
-            Archived — settled up and inactive for a while
+            Archived — hidden from your main Groups list
           </span>
           <button
             type="button"
@@ -850,6 +864,18 @@ export function GroupDetailPage() {
           setRemoveTarget(null)
         }}
         onCancel={() => setRemoveTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={confirmArchive}
+        title="Archive this group?"
+        description={`"${group.name}" moves to Archived and drops off your main list, but stays exactly as-is — everyone can still see it, and you can unarchive it anytime.`}
+        confirmLabel="Archive"
+        onConfirm={() => {
+          setConfirmArchive(false)
+          archiveGroup.mutate(group.id, { onSuccess: () => showToast(`${group.name} archived`) })
+        }}
+        onCancel={() => setConfirmArchive(false)}
       />
 
       <ConfirmDialog
