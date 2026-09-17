@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
-import { useGroups } from '../groups/hooks'
+import { useGroups, useAllGroups } from '../groups/hooks'
 import type { Expense, ValueDiff } from '../expenses/hooks'
 import { fetchLatestFieldDiffs } from '../expenses/hooks'
 import type { Settlement } from '../settlements/hooks'
@@ -114,7 +114,7 @@ export function useOverallSummary() {
  *  entirely client-side so switching ranges doesn't refetch. */
 export function useSpendingHistory() {
   const { session } = useAuth()
-  const { data: groups } = useGroups()
+  const { data: groups } = useAllGroups()
   const groupIds = (groups ?? []).map((g) => g.id)
 
   return useQuery({
@@ -185,7 +185,9 @@ const ACTIVITY_PAGE_SIZE = 25
 /** Paginated feed for the Activity page — grows on "load more" instead of ever fetching a user's entire history at once. */
 export function useActivityFeed() {
   const { session } = useAuth()
-  const { data: groups } = useGroups()
+  // Full history regardless of archived status — Activity is a permanent
+  // log, not a "what's current" view.
+  const { data: groups } = useAllGroups()
   const [limit, setLimit] = useState(ACTIVITY_PAGE_SIZE)
 
   const groupIds = (groups ?? []).map((g) => g.id)

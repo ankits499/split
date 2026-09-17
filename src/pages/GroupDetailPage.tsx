@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowLeftRight,
+  Archive,
   Receipt,
   Trash2,
   UserPlus,
@@ -24,6 +25,7 @@ import {
   useGroup,
   useRemoveMember,
   useRenameGroup,
+  useUnarchiveGroup,
   type GroupMember,
 } from '../features/groups/hooks'
 import {
@@ -98,6 +100,7 @@ export function GroupDetailPage() {
   const removeMember = useRemoveMember(groupId!)
   const renameGroup = useRenameGroup(groupId!)
   const deleteGroup = useDeleteGroup()
+  const unarchiveGroup = useUnarchiveGroup()
 
   const [tab, setTab] = useState<Tab>(routeState?.tab ?? 'expenses')
   const [editTarget, setEditTarget] = useState<Expense | null>(null)
@@ -334,6 +337,25 @@ export function GroupDetailPage() {
           </div>
         )}
       </div>
+
+      {group.archived_at && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface-2)] px-3.5 py-2.5">
+          <span className="flex items-center gap-2 text-xs text-[var(--color-ink-muted)]">
+            <Archive size={14} strokeWidth={2.25} />
+            Archived — settled up and inactive for a while
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              unarchiveGroup.mutate(group.id, { onSuccess: () => showToast(`${group.name} unarchived`) })
+            }
+            disabled={unarchiveGroup.isPending}
+            className="shrink-0 rounded-full border border-[var(--color-line)] bg-[var(--color-surface)] px-3 py-1 text-xs font-semibold text-[var(--color-ink)] disabled:opacity-50"
+          >
+            Unarchive
+          </button>
+        </div>
+      )}
 
       {leaveError && (
         <p className="mb-4 flex items-center gap-1.5 text-xs text-[var(--color-receipt)]">

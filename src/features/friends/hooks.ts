@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
-import { useGroups } from '../groups/hooks'
+import { useAllGroups } from '../groups/hooks'
 import { EXPENSE_COLUMNS, mapExpenseRow } from '../expenses/hooks'
 import type { Settlement } from '../settlements/hooks'
 import { pairwiseNet } from '../../utils/balances'
@@ -21,7 +21,9 @@ export interface FriendSummary {
 
 export function useFriendsSummary() {
   const { session } = useAuth()
-  const { data: groups } = useGroups()
+  // All groups, not just active ones — a friend's true balance shouldn't
+  // depend on whether a shared group happens to be archived right now.
+  const { data: groups } = useAllGroups()
 
   return useQuery({
     queryKey: [

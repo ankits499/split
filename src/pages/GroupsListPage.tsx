@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Users, UsersRound } from 'lucide-react'
-import { useGroups } from '../features/groups/hooks'
+import { Plus, Users, UsersRound, ChevronDown, Archive } from 'lucide-react'
+import { useArchivedGroups, useGroups, useUnarchiveGroup } from '../features/groups/hooks'
 import { useFriendsSummary } from '../features/friends/hooks'
 import { GroupCardContainer } from '../components/GroupCardContainer'
 import { Avatar } from '../components/Avatar'
 import { EmptyState } from '../components/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
+import { useToast } from '../features/toast'
 import { formatCurrency } from '../utils/money'
 
 function ListSkeleton() {
@@ -23,8 +24,12 @@ type View = 'groups' | 'friends'
 
 export function GroupsListPage() {
   const [view, setView] = useState<View>('groups')
+  const [showArchived, setShowArchived] = useState(false)
   const { data: groups, isLoading: groupsLoading } = useGroups()
+  const { data: archivedGroups } = useArchivedGroups()
   const { data: friends, isLoading: friendsLoading } = useFriendsSummary()
+  const unarchiveGroup = useUnarchiveGroup()
+  const showToast = useToast()
 
   return (
     <div className="flex flex-col overflow-hidden">
@@ -60,17 +65,56 @@ export function GroupsListPage() {
 
       <div className="flex-1 overflow-y-auto px-4 pb-6">
         {view === 'groups' ? (
-          groupsLoading ? (
-            <ListSkeleton />
-          ) : !groups || groups.length === 0 ? (
-            <EmptyState icon={Users} message="No groups yet." action={{ label: 'Create a group', to: '/groups/new' }} />
-          ) : (
-            <div className="space-y-3">
-              {groups.map((g) => (
-                <GroupCardContainer key={g.id} group={g} />
-              ))}
-            </div>
-          )
+          <>
+            {groupsLoading ? (
+              <ListSkeleton />
+            ) : !groups || groups.length === 0 ? (
+              <EmptyState
+                icon={Users}
+                message="No groups yet."
+                action={{ label: 'Create a group', to: '/groups/new' }}
+              />
+            ) : (
+              <div className="space-y-3">
+                {groups.map((g) => (
+                  <GroupCardContainer key={g.id} group={g} />
+                ))}
+              </div>
+            )}
+
+            {archivedGroups && archivedGroups.length > 0 && (
+              <div className="mt-5">
+                <button
+                  type="button"
+                  onClick={() => setShowArchived((v) => !v)}
+                  aria-expanded={showArchived}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-ink-muted)]"
+                >
+                  <Archive size={13} strokeWidth={2.25} />
+                  Archived ({archivedGroups.length})
+                  <ChevronDown
+                    size={13}
+                    strokeWidth={2.5}
+                    className={`transition-transform ${showArchived ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                {showArchived && (
+                  <div className="animate-rise mt-3 space-y-3">
+                    {archivedGroups.map((g) => (
+                      <GroupCardContainer
+                        key={g.id}
+                        group={g}
+                        archived
+                        onUnarchive={() =>
+                          unarchiveGroup.mutate(g.id, { onSuccess: () => showToast(`${g.name} unarchived`) })
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         ) : friendsLoading ? (
           <ListSkeleton />
         ) : !friends || friends.length === 0 ? (

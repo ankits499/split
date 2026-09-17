@@ -9,19 +9,25 @@ export function GroupCard({
   memberNames,
   netBalance,
   loading,
+  archived,
+  onUnarchive,
 }: {
   id: string
   name: string
   memberNames: string[]
   netBalance: number
   loading?: boolean
+  archived?: boolean
+  onUnarchive?: () => void
 }) {
   const settled = Math.abs(netBalance) < 0.01
 
   return (
     <Link
       to={`/groups/${id}`}
-      className="block rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)] active:opacity-80"
+      className={`block rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-card)] active:opacity-80 ${
+        archived ? 'opacity-70' : ''
+      }`}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -34,7 +40,18 @@ export function GroupCard({
           </div>
         </div>
         <div className="text-right">
-          {loading ? (
+          {archived ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                onUnarchive?.()
+              }}
+              className="rounded-full border border-[var(--color-line)] px-3 py-1.5 text-xs font-semibold text-[var(--color-ink)]"
+            >
+              Unarchive
+            </button>
+          ) : loading ? (
             <div className="flex flex-col items-end gap-1">
               <Skeleton className="h-2.5 w-16" />
               <Skeleton className="h-4 w-14" />
