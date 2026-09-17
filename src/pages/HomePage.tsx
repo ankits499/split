@@ -58,7 +58,6 @@ export function HomePage() {
   const settled = Math.abs(totalBalance) < 0.005
   const recentExpenses = summary?.recentExpenses ?? []
   const groupNameById = new Map((groups ?? []).map((g) => [g.id, g.name]))
-  const cycleNumberById = new Map((groups ?? []).map((g) => [g.id, g.cycle_number]))
   const memberNameById = new Map((groups ?? []).flatMap((g) => g.members.map((m) => [m.user_id, m.name] as const)))
 
   return (
@@ -214,9 +213,6 @@ export function HomePage() {
                     const editedByName = e.edited_at
                       ? (e.edited_by && memberNameById.get(e.edited_by)) || 'Someone'
                       : undefined
-                    // Cycle already closed for this group — the expense is a
-                    // past, settled record, not still contributing to what's owed.
-                    const isArchivedCycle = e.cycle < (cycleNumberById.get(e.group_id) ?? e.cycle)
                     return (
                       <Link
                         key={e.id}
@@ -233,17 +229,12 @@ export function HomePage() {
                               : addedByName
                                 ? ` · Added by ${firstName(addedByName)}`
                                 : ''}
-                            {isArchivedCycle ? ' · Settled' : ''}
                           </p>
                         </div>
                         {Math.abs(delta) > 0.01 && (
                           <span
                             className={`font-mono-nums shrink-0 text-sm font-semibold ${
-                              isArchivedCycle
-                                ? 'text-[var(--color-ink-muted)]'
-                                : delta > 0
-                                  ? 'text-[var(--color-ledger)]'
-                                  : 'text-[var(--color-receipt)]'
+                              delta > 0 ? 'text-[var(--color-ledger)]' : 'text-[var(--color-receipt)]'
                             }`}
                           >
                             {delta > 0 ? '+' : '−'}

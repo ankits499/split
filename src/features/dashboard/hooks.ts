@@ -63,6 +63,8 @@ export function useOverallSummary() {
       if (balanceErr) throw balanceErr
       if (expenseErr) throw expenseErr
 
+      const cycleNumberById = new Map((groups ?? []).map((g) => [g.id, g.cycle_number]))
+
       const expenses: Expense[] = expenseRows.map((e) => ({
         id: e.id,
         group_id: e.group_id,
@@ -97,7 +99,10 @@ export function useOverallSummary() {
         owed: Math.round(owed * 100) / 100,
         owe: Math.round(owe * 100) / 100,
         netByGroup,
-        recentExpenses: expenses.slice(0, 5),
+        // Home's Recent list is a teaser of what's current, not a full log
+        // (Activity already is that) — skip expenses whose cycle has since
+        // closed so those slots go to things still relevant today.
+        recentExpenses: expenses.filter((e) => e.cycle === cycleNumberById.get(e.group_id)).slice(0, 5),
       }
     },
     enabled: !!session?.user && !!groups,
